@@ -155,6 +155,8 @@ func saveUpdateReset(m *model) {
 	storage.SaveParty(&m.party)
 	updateTableData(m.party.ActiveMembers, &m.activeMemberTable)
 	resetInputs(m.coinInputs)
+	resetInputs(m.xpInputs)
+	resetInputs(m.memberInputs)
 }
 
 func changeCursorMode(inputs []textinput.Model, cursorMode *cursor.Mode) []tea.Cmd {
