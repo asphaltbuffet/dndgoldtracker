@@ -5,6 +5,7 @@ import (
 	"log"
 	"slices"
 	"sort"
+	"cmp"
 )
 
 // Adds a new member to the active member list and gives them last Coin Priority
@@ -84,7 +85,8 @@ func DistributeExperience(p *models.Party, xp int) {
 }
 
 func GetFirstCoinPriority(p *models.Party) int {
-	return slices.IndexFunc(p.ActiveMembers, func(m models.Member) bool { return m.CoinPriority == 0 })
+	partyMember := slices.MinFunc(p.ActiveMembers, func(a, b models.Member) int { return cmp.Compare(a.CoinPriority, b.CoinPriority) })
+	return slices.IndexFunc(p.ActiveMembers, func(m models.Member) bool {return m.Name == partyMember.Name})
 }
 
 func checkLevelUp(member *models.Member) {
