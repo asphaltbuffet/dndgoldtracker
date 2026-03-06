@@ -1,11 +1,12 @@
 package ui
 
 import (
-	"dndgoldtracker/models"
-	"dndgoldtracker/storage"
 	"fmt"
 	"strconv"
 	"strings"
+
+	"dndgoldtracker/models"
+	"dndgoldtracker/storage"
 
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/table"
@@ -152,7 +153,7 @@ func handleUnsetInputs(inputs []textinput.Model) {
 }
 
 func saveUpdateReset(m *model) {
-	storage.SaveParty(&m.party)
+	_ = storage.SaveParty(&m.party)
 	updateTableData(m.party.ActiveMembers, &m.activeMemberTable)
 	resetInputs(m.coinInputs)
 	resetInputs(m.xpInputs)
