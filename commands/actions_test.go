@@ -1,8 +1,11 @@
 package commands
 
 import (
-	"dndgoldtracker/models"
 	"testing"
+
+	"dndgoldtracker/models"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Test XP Distribution
@@ -24,6 +27,100 @@ func TestDistributeExperience(t *testing.T) {
 		if member.XP != expectedXP {
 			t.Errorf("Expected %d XP, but got %d for %s", expectedXP, member.XP, member.Name)
 		}
+	}
+}
+
+func TestGetFirstCoinPriority(t *testing.T) {
+	tests := []struct {
+		name    string
+		members []models.Member
+		want    int
+	}{
+		{
+			name: "single member always returns index 0",
+			members: []models.Member{
+				{Name: "Keg", CoinPriority: 5, Coins: map[string]int{}},
+			},
+			want: 0,
+		},
+		{
+			name: "lowest priority is first in slice",
+			members: []models.Member{
+				{Name: "Keg", CoinPriority: 0, Coins: map[string]int{}},
+				{Name: "Rowan", CoinPriority: 1, Coins: map[string]int{}},
+				{Name: "Fred", CoinPriority: 2, Coins: map[string]int{}},
+			},
+			want: 0,
+		},
+		{
+			name: "lowest priority is last in slice",
+			members: []models.Member{
+				{Name: "Keg", CoinPriority: 2, Coins: map[string]int{}},
+				{Name: "Rowan", CoinPriority: 1, Coins: map[string]int{}},
+				{Name: "Fred", CoinPriority: 0, Coins: map[string]int{}},
+			},
+			want: 2,
+		},
+		{
+			name: "lowest priority is in the middle",
+			members: []models.Member{
+				{Name: "Keg", CoinPriority: 2, Coins: map[string]int{}},
+				{Name: "Rowan", CoinPriority: 0, Coins: map[string]int{}},
+				{Name: "Fred", CoinPriority: 1, Coins: map[string]int{}},
+			},
+			want: 1,
+		},
+		{
+			name: "duplicate minimum priorities — returns first occurrence",
+			members: []models.Member{
+				{Name: "Keg", CoinPriority: 0, Coins: map[string]int{}},
+				{Name: "Rowan", CoinPriority: 0, Coins: map[string]int{}},
+				{Name: "Fred", CoinPriority: 1, Coins: map[string]int{}},
+			},
+			want: 0,
+		},
+		{
+			name: "all members share the same priority",
+			members: []models.Member{
+				{Name: "Keg", CoinPriority: 3, Coins: map[string]int{}},
+				{Name: "Rowan", CoinPriority: 3, Coins: map[string]int{}},
+				{Name: "Fred", CoinPriority: 3, Coins: map[string]int{}},
+			},
+			want: 0,
+		},
+		{
+			// negative priority values are not prevented by the model
+			name: "negative priority values",
+			members: []models.Member{
+				{Name: "Keg", CoinPriority: -1, Coins: map[string]int{}},
+				{Name: "Rowan", CoinPriority: 0, Coins: map[string]int{}},
+				{Name: "Fred", CoinPriority: 1, Coins: map[string]int{}},
+			},
+			want: 0,
+		},
+		{
+			// duplicate member names — the model has no name uniqueness constraint
+			name: "duplicate names — lowest priority is second occurrence",
+			members: []models.Member{
+				{Name: "fake", CoinPriority: 1, Coins: map[string]int{}},
+				{Name: "fake", CoinPriority: 0, Coins: map[string]int{}},
+			},
+			want: 1,
+		},
+		{
+			name:    "empty party",
+			members: []models.Member{},
+			want:    -1, // should just use a sentinel value as obviously wrong return
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &models.Party{ActiveMembers: tt.members}
+
+			got := GetFirstCoinPriority(p)
+			assert.Equal(t, tt.want, got)
+		})
 	}
 }
 
