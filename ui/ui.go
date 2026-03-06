@@ -99,6 +99,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				resetInputs(m.coinInputs)
 				resetInputs(m.xpInputs)
 				resetInputs(m.memberInputs)
+				blurTable(&m.activeMemberTable)
 				return m, nil
 			}
 			m.quitting = true

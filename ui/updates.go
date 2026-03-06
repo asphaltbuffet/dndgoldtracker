@@ -33,6 +33,11 @@ func updateChoices(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			}
 		case "enter":
 			m.chosen = true
+			if m.choice == 3 {
+				focusTable(&m.activeMemberTable)
+				blurTable(&m.inactiveMemberTable)
+				m.activeMemberTable.SetCursor(0)
+			}
 			return m, nil
 		}
 	}
@@ -220,13 +225,13 @@ func updateActivateMembers(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		case "tab":
 			// Change table focus with tab
 			if m.activeMemberTable.Focused() {
-				m.activeMemberTable.Blur()
-				m.inactiveMemberTable.Focus()
+				blurTable(&m.activeMemberTable)
+				focusTable(&m.inactiveMemberTable)
 				m.inactiveMemberTable.SetCursor(0)
 			} else {
-				m.activeMemberTable.Focus()
+				focusTable(&m.activeMemberTable)
 				m.activeMemberTable.SetCursor(0)
-				m.inactiveMemberTable.Blur()
+				blurTable(&m.inactiveMemberTable)
 			}
 		case "enter":
 			var selectedTable *table.Model
@@ -264,6 +269,7 @@ func updateActivateMembers(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			m.inactiveMemberTable.SetRows(membersToRows(m.party.InactiveMembers))
 		case "s":
 			_ = storage.SaveParty(&m.party)
+			blurTable(&m.activeMemberTable)
 			m.chosen = false
 		}
 	}
