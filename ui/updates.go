@@ -248,7 +248,7 @@ func updateActivateMembers(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				unselectedMembers = &m.party.ActiveMembers
 			}
 			// activate/deactivate member
-			if len(selectedTable.SelectedRow()) <= 0 {
+			if len(selectedTable.SelectedRow()) == 0 {
 				// Unselected cursor or empty table
 				// Set cursor to first element and return
 				log.Println("Unselected cursor thing")

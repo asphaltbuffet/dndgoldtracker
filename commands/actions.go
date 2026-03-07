@@ -8,14 +8,14 @@ import (
 	"dndgoldtracker/models"
 )
 
-// Adds a new member to the active member list and gives them last Coin Priority
+// AddMember creates a new party member in the active member list and gives them last Coin Priority
 func AddMember(p *models.Party, name string, xp int, money map[string]int) {
 	m := models.Member{Name: name, Level: determineLevel(xp), XP: xp, Coins: money, CoinPriority: len(p.ActiveMembers)}
 	p.ActiveMembers = append(p.ActiveMembers, m)
 	log.Printf("Welcome to the party %s!\n", m.Name)
 }
 
-// Moves a member to a different group e.g. Active to Inactive
+// ChangeMemberGroup moves a member to a different group e.g. Active to Inactive
 func ChangeMemberGroup(srcGroup *[]models.Member, dstGroup *[]models.Member, index int) {
 	*dstGroup = append(*dstGroup, (*srcGroup)[index])
 	(*dstGroup)[len(*dstGroup)-1].CoinPriority = len(*dstGroup) - 1
@@ -87,7 +87,7 @@ func DistributeExperience(p *models.Party, xp int) {
 // GetFirstCoinPriority returns a member of the party with the lowest priority.
 // returns -1 if there are no members
 func GetFirstCoinPriority(p *models.Party) int {
-	if len(p.ActiveMembers) <= 0 {
+	if len(p.ActiveMembers) == 0 {
 		return -1
 	}
 	minIdx := 0
@@ -103,12 +103,11 @@ func GetFirstCoinPriority(p *models.Party) int {
 
 func checkLevelUp(member *models.Member) {
 	for member.Level < len(models.XpThresholds)-1 {
-		if member.XP >= models.XpThresholds[member.Level] {
-			member.Level++
-			log.Printf("🎉 %s leveled up to Level %d! 🎉\n", member.Name, member.Level)
-		} else {
+		if member.XP < models.XpThresholds[member.Level] {
 			break
 		}
+		member.Level++
+		log.Printf("🎉 %s leveled up to Level %d! 🎉\n", member.Name, member.Level)
 	}
 }
 

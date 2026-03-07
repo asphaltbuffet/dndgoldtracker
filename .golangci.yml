@@ -1,0 +1,64 @@
+version: "2"
+
+linters:
+  # Start from the standard preset (errcheck, govet, staticcheck, ineffassign, unused)
+  default: standard
+  enable:
+    # Correctness
+    - errorlint      # catches errors.Is/As pitfalls from Go 1.13 wrapping
+    - nilerr         # catches `if err != nil { return nil }` bugs
+    - nilnesserr     # catches nil-wrapped error return bugs
+    - makezero       # catches slice declarations with wrong initial length
+
+    # Idiomatic Go
+    - intrange       # suggests `for i := range n` over `for i := 0; i < n; i++`
+    - unconvert      # removes unnecessary type conversions
+    - prealloc       # suggests pre-allocating slices where length is known
+    - predeclared    # catches shadowing of built-ins (len, cap, error, etc.)
+    - nakedret       # flags naked returns in long functions (confusing to read)
+    - revive         # drop-in golint replacement; idiomatic style guidance
+    - gocritic       # curated subset of idiomatic checks (see settings below)
+    - misspell       # catches common English spelling mistakes in comments/strings
+    - testifylint    # enforces correct testify assertion usage
+    - thelper        # ensures test helpers call t.Helper()
+    - copyloopvar    # detects loop variable capture issues (pre-Go 1.22 footguns)
+    - recvcheck      # flags inconsistent receiver types on the same type
+
+  settings:
+    nakedret:
+      max-func-lines: 10  # only flag naked returns in functions longer than this
+
+    revive:
+      rules:
+        - name: var-naming         # enforces Go naming conventions
+        - name: indent-error-flow  # `if err != nil { return }` should not be in else
+        - name: unused-parameter   # flags unused function parameters
+        - name: early-return       # suggests inverting conditions to reduce nesting
+
+    gocritic:
+      enabled-checks:
+        # These are already enabled by default, listed here for documentation:
+        # ifElseChain, singleCaseSwitch, commentFormatting, elseif, appendAssign
+        - rangeValCopy  # catches copying large values in range loops (not on by default)
+
+  exclusions:
+    rules:
+      # Test files get relaxed rules — unexported names, magic numbers, etc. are fine
+      - path: "_test\\.go"
+        linters:
+          - revive
+          - gocritic
+          - prealloc
+
+      # BubbleTea type-switch pattern: `switch msg := msg.(type)` is idiomatic even
+      # with a single case because it binds the concrete type to a new variable.
+      # A plain `if` cannot do this, so singleCaseSwitch is a false positive here.
+      - path: "ui/"
+        linters:
+          - gocritic
+        text: "singleCaseSwitch"
+
+formatters:
+  enable:
+    - gofmt      # standard formatting
+    - goimports  # adds missing imports, removes unused, groups stdlib vs external

@@ -24,7 +24,7 @@ func checkbox(label string, checked bool) string {
 
 // Convert members to table rows
 func membersToRows(members []models.Member) []table.Row {
-	var rows []table.Row
+	rows := make([]table.Row, 0, len(members))
 	for _, m := range members {
 		rows = append(rows, table.Row{
 			m.Name,
@@ -40,7 +40,7 @@ func membersToRows(members []models.Member) []table.Row {
 	return rows
 }
 
-func (m *model) updateInputs(msg tea.Msg, inputs []textinput.Model) tea.Cmd {
+func (m model) updateInputs(msg tea.Msg, inputs []textinput.Model) tea.Cmd {
 	cmds := make([]tea.Cmd, len(inputs))
 
 	// Only text inputs with Focus() set will respond, so it's safe to simply
