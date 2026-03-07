@@ -48,7 +48,7 @@ func moneyView(m model) string {
 			focusedStyle.Render(m.party.ActiveMembers[commands.GetFirstCoinPriority(&m.party)].Name))
 	}
 
-	msg.WriteString("\n" + buildInputList(m.coinInputs, m.coinFocusIndex, m.cursorMode))
+	msg.WriteString("\n" + buildInputList(m.coinInputs, m.coinFocusIndex, m.virtualCursor))
 	return msg.String()
 }
 
@@ -56,14 +56,14 @@ func moneyView(m model) string {
 func xpView(m model) string {
 	var msg strings.Builder
 	msg.WriteString("Xp entered here will be distributed to all party members equally\n\n")
-	msg.WriteString(buildInputList(m.xpInputs, m.xpFocusIndex, m.cursorMode))
+	msg.WriteString(buildInputList(m.xpInputs, m.xpFocusIndex, m.virtualCursor))
 	return msg.String()
 }
 
 func addMemberView(m model) string {
 	var msg strings.Builder
 	msg.WriteString("Enter the new party member's data\n")
-	msg.WriteString(buildInputList(m.memberInputs, m.memberFocusIndex, m.cursorMode))
+	msg.WriteString(buildInputList(m.memberInputs, m.memberFocusIndex, m.virtualCursor))
 	return msg.String()
 }
 

@@ -9,8 +9,8 @@ import (
 	"dndgoldtracker/models"
 	"dndgoldtracker/storage"
 
-	"github.com/charmbracelet/bubbles/table"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/table"
+	tea "charm.land/bubbletea/v2"
 )
 
 // Sub-Updates
@@ -18,7 +18,7 @@ import (
 // Update loop for the first view where you're choosing a task.
 func updateChoices(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "j", "down":
 			m.choice++
@@ -47,14 +47,13 @@ func updateChoices(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 // Update loop for updating party money
 func updateMoney(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		// Change cursor mode
 		case "ctrl+r":
-			var cmds []tea.Cmd
-			cmds = changeCursorMode(m.xpInputs, &m.cursorMode)
+			changeCursorMode(m.coinInputs, &m.virtualCursor)
+			return m, nil
 
-			return m, tea.Batch(cmds...)
 		// Set focus to next input
 		case "enter":
 			// Did the user press enter while the submit button was focused?
@@ -105,13 +104,12 @@ func updateMoney(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 // Update loop for updating party experience
 func updateExperience(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		// Change cursor mode
 		case "ctrl+r":
-			var cmds []tea.Cmd
-			cmds = changeCursorMode(m.xpInputs, &m.cursorMode)
-			return m, tea.Batch(cmds...)
+			changeCursorMode(m.xpInputs, &m.virtualCursor)
+			return m, nil
 
 		// Set focus to next input
 		case "enter":
@@ -157,14 +155,13 @@ func updateExperience(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 // Update loop for adding members
 func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		// Change cursor mode
 		case "ctrl+r":
-			var cmds []tea.Cmd
-			cmds = changeCursorMode(m.memberInputs, &m.cursorMode)
+			changeCursorMode(m.memberInputs, &m.virtualCursor)
+			return m, nil
 
-			return m, tea.Batch(cmds...)
 		// Set focus to next input
 		case "enter":
 			// Did the user press enter while the submit button was focused?
@@ -226,7 +223,7 @@ func updateActivateMembers(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	var activeCmd tea.Cmd
 	var inactiveCmd tea.Cmd
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "tab":
 			// Change table focus with tab
