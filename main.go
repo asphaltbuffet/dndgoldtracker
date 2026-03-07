@@ -1,10 +1,12 @@
 package main
 
 import (
-	"dndgoldtracker/ui"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
+	"strings"
+
+	"dndgoldtracker/ui"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -20,7 +22,7 @@ func run() error {
 	fileName := "logFile.log"
 
 	// open log file
-	logFile, err := os.OpenFile(fileName, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
+	logFile, err := os.OpenFile(fileName, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0o644)
 	if err != nil {
 		return fmt.Errorf("opening log file: %w", err)
 	}
@@ -30,13 +32,11 @@ func run() error {
 		}
 	}()
 
-	// set log out put
-	log.SetOutput(logFile)
+	// set logging level from ENV (if available)
+	level := parseLogLevel(os.Getenv("DNDGOLD_LOGGING"))
+	handler := slog.NewTextHandler(logFile, &slog.HandlerOptions{Level: level})
+	slog.SetDefault(slog.New(handler))
 
-	// optional: log date-time, filename, and line number
-	log.SetFlags(log.Lshortfile | log.LstdFlags)
-
-	// Initialize and run the program
 	p := tea.NewProgram(ui.NewModel())
 
 	if _, err := p.Run(); err != nil {
@@ -44,4 +44,18 @@ func run() error {
 	}
 
 	return nil
+}
+
+// parseLogLevel converts a string into a log level
+func parseLogLevel(s string) slog.Level {
+	switch strings.ToLower(s) {
+	case "debug":
+		return slog.LevelDebug
+	case "warn":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
 }

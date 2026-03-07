@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"log"
+	"log/slog"
 	"slices"
 	"sort"
 
@@ -12,7 +12,7 @@ import (
 func AddMember(p *models.Party, name string, xp int, money map[string]int) {
 	m := models.Member{Name: name, Level: determineLevel(xp), XP: xp, Coins: money, CoinPriority: len(p.ActiveMembers)}
 	p.ActiveMembers = append(p.ActiveMembers, m)
-	log.Printf("Welcome to the party %s!\n", m.Name)
+	slog.Info("new party member", "name", m.Name)
 }
 
 // ChangeMemberGroup moves a member to a different group e.g. Active to Inactive
@@ -27,7 +27,7 @@ func ChangeMemberGroup(srcGroup *[]models.Member, dstGroup *[]models.Member, ind
 func DistributeCoins(p *models.Party, money map[string]int) {
 	numMembers := len(p.ActiveMembers)
 	if numMembers == 0 {
-		log.Println("No members to distribute coins to.")
+		slog.Warn("did not distribute money", "party", p, "money", money)
 		return
 	}
 
@@ -45,7 +45,7 @@ func DistributeCoins(p *models.Party, money map[string]int) {
 
 		// Assign evenly to each member
 		for i := range p.ActiveMembers {
-			log.Printf("Adding %d of %s to %s's wallet\n", each, coinType, p.ActiveMembers[i].Name)
+			slog.Debug("adding coins", "amount", each, "type", coinType, "member", p.ActiveMembers[i].Name)
 			p.ActiveMembers[i].Coins[coinType] += each
 		}
 
@@ -68,6 +68,8 @@ func DistributeCoins(p *models.Party, money map[string]int) {
 	// Distribute coins in the predefined order
 	for _, coinType := range models.CoinOrder {
 		amount, exists := money[coinType]
+		slog.Info("distributing coin", "type", coinType, "amount", amount)
+
 		if exists {
 			distributeCoin(coinType, amount)
 		}
@@ -76,12 +78,17 @@ func DistributeCoins(p *models.Party, money map[string]int) {
 
 // DistributeExperience distributes XP and checks for level-ups
 func DistributeExperience(p *models.Party, xp int) {
+	splitXP := xp / len(p.ActiveMembers)
+	extraXP := xp % len(p.ActiveMembers)
+
 	for i := range p.ActiveMembers {
-		p.ActiveMembers[i].XP += xp / len(p.ActiveMembers)
+		p.ActiveMembers[i].XP += splitXP
+		slog.Info("gained xp", "member", p.ActiveMembers[i].Name, "amount", splitXP)
+
 		checkLevelUp(&p.ActiveMembers[i])
 	}
 
-	log.Println("XP added!")
+	slog.Info("distributed xp", "total", xp, "per_member", splitXP, "unclaimed", extraXP)
 }
 
 // GetFirstCoinPriority returns a member of the party with the lowest priority.
@@ -106,8 +113,10 @@ func checkLevelUp(member *models.Member) {
 		if member.XP < models.XpThresholds[member.Level] {
 			break
 		}
+
 		member.Level++
-		log.Printf("🎉 %s leveled up to Level %d! 🎉\n", member.Name, member.Level)
+
+		slog.Info("level up", "member", member.Name, "level", member.Level)
 	}
 }
 
