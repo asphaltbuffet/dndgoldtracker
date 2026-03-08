@@ -17,7 +17,11 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	defer logFile.Close()
+	defer func(){
+		if err := logFile.Close(); err != nil{
+			fmt.Println("Error:", fmt.Errorf("closing log file: %w", err))
+		}
+	}()
 
 	// set log out put
 	log.SetOutput(logFile)
@@ -29,7 +33,7 @@ func main() {
 	p := tea.NewProgram(ui.NewModel())
 
 	if _, err := p.Run(); err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("Error:", fmt.Errorf("application runtime: %w", err))
 		os.Exit(1)
 	}
 }

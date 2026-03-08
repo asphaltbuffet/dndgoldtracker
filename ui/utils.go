@@ -1,11 +1,12 @@
 package ui
 
 import (
-	"dndgoldtracker/models"
-	"dndgoldtracker/storage"
 	"fmt"
 	"strconv"
 	"strings"
+
+	"dndgoldtracker/models"
+	"dndgoldtracker/storage"
 
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/table"
@@ -90,10 +91,35 @@ func configureTable(members []models.Member) table.Model {
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithRows(rows),
-		table.WithFocused(true),
 		table.WithHeight(5),
 	)
 
+	s := table.DefaultStyles()
+	s.Header = s.Header.
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		BorderBottom(true).
+		Bold(false)
+	s.Selected = lipgloss.NewStyle()
+	t.SetStyles(s)
+
+	return t
+}
+
+func blurTable(t *table.Model) {
+	t.Blur()
+	s := table.DefaultStyles()
+	s.Header = s.Header.
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		BorderBottom(true).
+		Bold(false)
+	s.Selected = lipgloss.NewStyle()
+	t.SetStyles(s)
+}
+
+func focusTable(t *table.Model) {
+	t.Focus()
 	s := table.DefaultStyles()
 	s.Header = s.Header.
 		BorderStyle(lipgloss.NormalBorder()).
@@ -105,8 +131,6 @@ func configureTable(members []models.Member) table.Model {
 		Background(lipgloss.Color("57")).
 		Bold(false)
 	t.SetStyles(s)
-
-	return t
 }
 
 func updateTableData(members []models.Member, t *table.Model) *table.Model {
@@ -152,7 +176,7 @@ func handleUnsetInputs(inputs []textinput.Model) {
 }
 
 func saveUpdateReset(m *model) {
-	storage.SaveParty(&m.party)
+	_ = storage.SaveParty(&m.party)
 	updateTableData(m.party.ActiveMembers, &m.activeMemberTable)
 	resetInputs(m.coinInputs)
 	resetInputs(m.xpInputs)

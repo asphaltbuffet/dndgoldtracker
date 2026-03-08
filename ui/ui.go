@@ -86,7 +86,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Make sure these keys always quit
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
-		if k == "q" || k == "esc" || k == "ctrl+c" {
+		if k == "ctrl+c" || (k == "q" && !m.chosen) {
+			m.quitting = true
+			return m, tea.Quit
+		}
+		if k == "esc" {
+			if m.chosen {
+				m.chosen = false
+				m.coinFocusIndex = 0
+				m.xpFocusIndex = 0
+				m.memberFocusIndex = 0
+				resetInputs(m.coinInputs)
+				resetInputs(m.xpInputs)
+				resetInputs(m.memberInputs)
+				blurTable(&m.activeMemberTable)
+				return m, nil
+			}
 			m.quitting = true
 			return m, tea.Quit
 		}

@@ -1,13 +1,14 @@
 package ui
 
 import (
-	"dndgoldtracker/commands"
-	"dndgoldtracker/models"
-	"dndgoldtracker/storage"
 	"fmt"
 	"log"
 	"slices"
 	"strconv"
+
+	"dndgoldtracker/commands"
+	"dndgoldtracker/models"
+	"dndgoldtracker/storage"
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
@@ -32,6 +33,11 @@ func updateChoices(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			}
 		case "enter":
 			m.chosen = true
+			if m.choice == 3 {
+				focusTable(&m.activeMemberTable)
+				blurTable(&m.inactiveMemberTable)
+				m.activeMemberTable.SetCursor(0)
+			}
 			return m, nil
 		}
 	}
@@ -77,13 +83,13 @@ func updateMoney(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			// Cycle indexes
-		case "up", "shift-tab", "down":
-			s := msg.String()
-			if s == "down" {
-				m.coinFocusIndex++
-			} else {
-				m.coinFocusIndex--
-			}
+		case "tab", "down":
+			m.coinFocusIndex++
+			log.Printf("coinFocusIndex = %d", m.coinFocusIndex)
+			cmds := updateFocusIndex(&m.coinFocusIndex, m.coinInputs)
+			return m, tea.Batch(cmds...)
+		case "up", "shift+tab":
+			m.coinFocusIndex--
 			log.Printf("coinFocusIndex = %d", m.coinFocusIndex)
 			cmds := updateFocusIndex(&m.coinFocusIndex, m.coinInputs)
 			return m, tea.Batch(cmds...)
@@ -126,13 +132,12 @@ func updateExperience(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				m.chosen = false
 				return m, nil
 			}
-		case "up", "shift-tab", "down":
-			s := msg.String()
-			if s == "down" {
-				m.xpFocusIndex++
-			} else {
-				m.xpFocusIndex--
-			}
+		case "tab", "down":
+			m.xpFocusIndex++
+			cmds := updateFocusIndex(&m.xpFocusIndex, m.xpInputs)
+			return m, tea.Batch(cmds...)
+		case "up", "shift+tab":
+			m.xpFocusIndex--
 			cmds := updateFocusIndex(&m.xpFocusIndex, m.xpInputs)
 			return m, tea.Batch(cmds...)
 		}
@@ -192,13 +197,13 @@ func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 		// Cycle indexes
-		case "up", "shift-tab", "down":
-			s := msg.String()
-			if s == "down" {
-				m.memberFocusIndex++
-			} else {
-				m.memberFocusIndex--
-			}
+		case "tab", "down":
+			m.memberFocusIndex++
+			log.Printf("memberFocusIndex = %d", m.memberFocusIndex)
+			cmds := updateFocusIndex(&m.memberFocusIndex, m.memberInputs)
+			return m, tea.Batch(cmds...)
+		case "up", "shift+tab":
+			m.memberFocusIndex--
 			log.Printf("memberFocusIndex = %d", m.memberFocusIndex)
 			cmds := updateFocusIndex(&m.memberFocusIndex, m.memberInputs)
 			return m, tea.Batch(cmds...)
@@ -220,13 +225,13 @@ func updateActivateMembers(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		case "tab":
 			// Change table focus with tab
 			if m.activeMemberTable.Focused() {
-				m.activeMemberTable.Blur()
-				m.inactiveMemberTable.Focus()
+				blurTable(&m.activeMemberTable)
+				focusTable(&m.inactiveMemberTable)
 				m.inactiveMemberTable.SetCursor(0)
 			} else {
-				m.activeMemberTable.Focus()
+				focusTable(&m.activeMemberTable)
 				m.activeMemberTable.SetCursor(0)
-				m.inactiveMemberTable.Blur()
+				blurTable(&m.inactiveMemberTable)
 			}
 		case "enter":
 			var selectedTable *table.Model
@@ -263,10 +268,10 @@ func updateActivateMembers(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			m.activeMemberTable.SetRows(membersToRows(m.party.ActiveMembers))
 			m.inactiveMemberTable.SetRows(membersToRows(m.party.InactiveMembers))
 		case "s":
-			storage.SaveParty(&m.party)
+			_ = storage.SaveParty(&m.party)
+			blurTable(&m.activeMemberTable)
 			m.chosen = false
 		}
-
 	}
 
 	m.activeMemberTable, activeCmd = m.activeMemberTable.Update(msg)
