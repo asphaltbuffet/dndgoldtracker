@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 
@@ -183,7 +184,9 @@ func handleUnsetInputs(inputs []textinput.Model) {
 }
 
 func saveUpdateReset(m *model) {
-	_ = storage.SaveParty(&m.party)
+	if err := storage.SaveParty(&m.party); err != nil {
+		slog.Error("failed to save party data", "err", err)
+	}
 	updateTableData(m.party.ActiveMembers, &m.activeMemberTable)
 	resetInputs(m.coinInputs)
 	resetInputs(m.xpInputs)
