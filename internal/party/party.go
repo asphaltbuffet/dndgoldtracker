@@ -1,7 +1,6 @@
 package party
 
 import (
-	"fmt"
 	"log/slog"
 	"sort"
 )
