@@ -137,10 +137,9 @@ func focusTable(t *table.Model) {
 	t.SetStyles(s)
 }
 
-func updateTableData(members []party.Member, t *table.Model) *table.Model {
+func updateTableData(members []party.Member, t *table.Model) {
 	rows := membersToRows(members)
 	t.SetRows(rows)
-	return t
 }
 
 func resetInputs(inputs []textinput.Model) {

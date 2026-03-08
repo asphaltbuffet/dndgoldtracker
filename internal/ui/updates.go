@@ -183,7 +183,7 @@ func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 
-				newMemberCoins := m.memberInputs[2:len(m.memberInputs)]
+				newMemberCoins := m.memberInputs[2:]
 				newMemberMoney := make(map[party.Coin]int)
 				for i := range newMemberCoins {
 					newMemberMoney[party.Coin(i)], err = strconv.Atoi(newMemberCoins[i].Value())

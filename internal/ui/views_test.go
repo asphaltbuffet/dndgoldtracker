@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 var ansiEscape = regexp.MustCompile(`\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])`)
 
 func stripANSI(s string) string {
