@@ -31,10 +31,9 @@ var (
 	helpStyle           = blurredStyle
 	cursorModeHelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
 
-	focusedButton   = focusedStyle.Render("[ Submit ]")
-	blurredButton   = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
-	xpFields        = []string{xp}
-	newMemberFields = []string{name, xp}
+	focusedButton = focusedStyle.Render("[ Submit ]")
+	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
+	xpFields      = []string{xp}
 )
 
 type model struct {
@@ -62,7 +61,7 @@ func NewModel() model {
 		p = party.Party{}
 	}
 
-	newMemberFields = append(newMemberFields, party.CoinOrderNames...)
+	newMemberFields := append([]string{name, xp}, party.CoinOrderNames...)
 
 	amt := configureTable(p.ActiveMembers)
 	imt := configureTable(p.InactiveMembers)
