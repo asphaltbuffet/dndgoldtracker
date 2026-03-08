@@ -5,8 +5,7 @@ import (
 	"slices"
 	"strconv"
 
-	"dndgoldtracker/commands"
-	"dndgoldtracker/models"
+	party "dndgoldtracker/internal/party"
 	"dndgoldtracker/storage"
 
 	"charm.land/bubbles/v2/table"
@@ -64,19 +63,19 @@ func updateMoney(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				// Set any unset values to 0
 				handleUnsetInputs(m.coinInputs)
 
-				for i := range models.CoinOrder {
-					coinMap[models.CoinOrder[i]], err = strconv.Atoi(m.coinInputs[i].Value())
+				for i := range party.CoinOrder {
+					coinMap[party.CoinOrder[i]], err = strconv.Atoi(m.coinInputs[i].Value())
 					if err != nil {
-						slog.Error("invalid coin value", "type", models.CoinOrder[i], "input", m.coinInputs[i].Value(), "err", err)
+						slog.Error("invalid coin value", "type", party.CoinOrder[i], "input", m.coinInputs[i].Value(), "err", err)
 
 						return m, nil
 					}
 
-					slog.Debug("coin input parsed", "type", models.CoinOrder[i], "amount", coinMap[models.CoinOrder[i]])
+					slog.Debug("coin input parsed", "type", party.CoinOrder[i], "amount", coinMap[party.CoinOrder[i]])
 				}
 
 				// Distribute the coins to the party
-				commands.DistributeCoins(&m.party, coinMap)
+				party.DistributeCoins(&m.party, coinMap)
 				saveUpdateReset(&m)
 
 				m.chosen = false
@@ -128,7 +127,7 @@ func updateExperience(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 				slog.Debug("parsed xp input", "xp", xp)
 
-				commands.DistributeExperience(&m.party, xp)
+				party.DistributeExperience(&m.party, xp)
 				saveUpdateReset(&m)
 
 				m.chosen = false
@@ -193,7 +192,7 @@ func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				}
 
 				// Add the new party Member
-				commands.AddMember(&m.party, name, xp, newMemberMoney)
+				party.AddMember(&m.party, name, xp, newMemberMoney)
 				saveUpdateReset(&m)
 
 				m.chosen = false
@@ -238,8 +237,8 @@ func updateActivateMembers(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			}
 		case "enter":
 			var selectedTable *table.Model
-			var selectedMembers *[]models.Member
-			var unselectedMembers *[]models.Member
+			var selectedMembers *[]party.Member
+			var unselectedMembers *[]party.Member
 			// Move the selected member from their current table to the new one
 			if m.activeMemberTable.Focused() {
 				selectedTable = &m.activeMemberTable
@@ -266,8 +265,8 @@ func updateActivateMembers(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			}
 			slog.Info("moving member", "name", memberName, "from", from, "to", to)
 
-			memberIndex := slices.IndexFunc(*selectedMembers, func(m models.Member) bool { return m.Name == memberName })
-			commands.ChangeMemberGroup(selectedMembers, unselectedMembers, memberIndex)
+			memberIndex := slices.IndexFunc(*selectedMembers, func(m party.Member) bool { return m.Name == memberName })
+			party.ChangeMemberGroup(selectedMembers, unselectedMembers, memberIndex)
 			m.activeMemberTable.SetRows(membersToRows(m.party.ActiveMembers))
 			m.inactiveMemberTable.SetRows(membersToRows(m.party.InactiveMembers))
 		case "s":

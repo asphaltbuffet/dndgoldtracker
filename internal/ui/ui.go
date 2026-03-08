@@ -1,9 +1,10 @@
 package ui
 
 import (
-	"dndgoldtracker/models"
-	"dndgoldtracker/storage"
 	"fmt"
+
+	"dndgoldtracker/internal/party"
+	"dndgoldtracker/storage"
 
 	"charm.land/bubbles/v2/table"
 	"charm.land/bubbles/v2/textinput"
@@ -38,7 +39,7 @@ var (
 type model struct {
 	activeMemberTable   table.Model
 	inactiveMemberTable table.Model
-	party               models.Party
+	party               party.Party
 	choice              int
 	chosen              bool
 	coinFocusIndex      int
@@ -56,15 +57,15 @@ func NewModel() model {
 	p, err := storage.LoadParty() // Load saved data
 	if err != nil {
 		fmt.Println("Starting new party...")
-		p = models.Party{}
+		p = party.Party{}
 	}
 
-	newMemberFields = append(newMemberFields, models.CoinOrder...)
+	newMemberFields = append(newMemberFields, party.CoinOrder...)
 
 	amt := configureTable(p.ActiveMembers)
 	imt := configureTable(p.InactiveMembers)
 
-	ci := configureInputs(models.CoinOrder)
+	ci := configureInputs(party.CoinOrder)
 	xi := configureInputs(xpFields)
 	mi := configureInputs(newMemberFields)
 

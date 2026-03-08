@@ -1,22 +1,20 @@
-package commands
+package party
 
 import (
 	"log/slog"
 	"slices"
 	"sort"
-
-	"dndgoldtracker/models"
 )
 
 // AddMember creates a new party member in the active member list and gives them last Coin Priority
-func AddMember(p *models.Party, name string, xp int, money map[string]int) {
-	m := models.Member{Name: name, Level: determineLevel(xp), XP: xp, Coins: money, CoinPriority: len(p.ActiveMembers)}
+func AddMember(p *Party, name string, xp int, money map[string]int) {
+	m := Member{Name: name, Level: determineLevel(xp), XP: xp, Coins: money, CoinPriority: len(p.ActiveMembers)}
 	p.ActiveMembers = append(p.ActiveMembers, m)
 	slog.Info("new party member", "name", m.Name)
 }
 
 // ChangeMemberGroup moves a member to a different group e.g. Active to Inactive
-func ChangeMemberGroup(srcGroup *[]models.Member, dstGroup *[]models.Member, index int) {
+func ChangeMemberGroup(srcGroup *[]Member, dstGroup *[]Member, index int) {
 	*dstGroup = append(*dstGroup, (*srcGroup)[index])
 	(*dstGroup)[len(*dstGroup)-1].CoinPriority = len(*dstGroup) - 1
 	*srcGroup = slices.Delete((*srcGroup), index, index+1)
@@ -24,7 +22,7 @@ func ChangeMemberGroup(srcGroup *[]models.Member, dstGroup *[]models.Member, ind
 
 // DistributeCoins distributes coins fairly among party members in a fixed order
 // Hands extras out one at a time and rotates coin priority
-func DistributeCoins(p *models.Party, money map[string]int) {
+func DistributeCoins(p *Party, money map[string]int) {
 	numMembers := len(p.ActiveMembers)
 	if numMembers == 0 {
 		slog.Warn("did not distribute money", "party", p, "money", money)
@@ -66,7 +64,7 @@ func DistributeCoins(p *models.Party, money map[string]int) {
 	}
 
 	// Distribute coins in the predefined order
-	for _, coinType := range models.CoinOrder {
+	for _, coinType := range CoinOrder {
 		amount, exists := money[coinType]
 		slog.Info("distributing coin", "type", coinType, "amount", amount)
 
@@ -77,7 +75,7 @@ func DistributeCoins(p *models.Party, money map[string]int) {
 }
 
 // DistributeExperience distributes XP and checks for level-ups
-func DistributeExperience(p *models.Party, xp int) {
+func DistributeExperience(p *Party, xp int) {
 	splitXP := xp / len(p.ActiveMembers)
 	extraXP := xp % len(p.ActiveMembers)
 
@@ -93,7 +91,7 @@ func DistributeExperience(p *models.Party, xp int) {
 
 // GetFirstCoinPriority returns a member of the party with the lowest priority.
 // returns -1 if there are no members
-func GetFirstCoinPriority(p *models.Party) int {
+func GetFirstCoinPriority(p *Party) int {
 	if len(p.ActiveMembers) == 0 {
 		return -1
 	}
@@ -108,9 +106,9 @@ func GetFirstCoinPriority(p *models.Party) int {
 	return minIdx
 }
 
-func checkLevelUp(member *models.Member) {
-	for member.Level < len(models.XpThresholds)-1 {
-		if member.XP < models.XpThresholds[member.Level] {
+func checkLevelUp(member *Member) {
+	for member.Level < len(XpThresholds)-1 {
+		if member.XP < XpThresholds[member.Level] {
 			break
 		}
 
@@ -122,8 +120,8 @@ func checkLevelUp(member *models.Member) {
 
 // Determines the level of a character for a given amount of xp
 func determineLevel(xp int) int {
-	for i := range models.XpThresholds {
-		if xp < models.XpThresholds[i] {
+	for i := range XpThresholds {
+		if xp < XpThresholds[i] {
 			return i
 		}
 	}

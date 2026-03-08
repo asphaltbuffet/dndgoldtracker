@@ -1,17 +1,15 @@
-package commands
+package party
 
 import (
 	"testing"
-
-	"dndgoldtracker/models"
 
 	"github.com/stretchr/testify/assert"
 )
 
 // Test XP Distribution
 func TestDistributeExperience(t *testing.T) {
-	party := models.Party{
-		ActiveMembers: []models.Member{
+	party := Party{
+		ActiveMembers: []Member{
 			{Name: "Keg", Level: 1, XP: 0},
 			{Name: "Rowan", Level: 1, XP: 0},
 		},
@@ -33,19 +31,19 @@ func TestDistributeExperience(t *testing.T) {
 func TestGetFirstCoinPriority(t *testing.T) {
 	tests := []struct {
 		name    string
-		members []models.Member
+		members []Member
 		want    int
 	}{
 		{
 			name: "single member always returns index 0",
-			members: []models.Member{
+			members: []Member{
 				{Name: "Keg", CoinPriority: 5, Coins: map[string]int{}},
 			},
 			want: 0,
 		},
 		{
 			name: "lowest priority is first in slice",
-			members: []models.Member{
+			members: []Member{
 				{Name: "Keg", CoinPriority: 0, Coins: map[string]int{}},
 				{Name: "Rowan", CoinPriority: 1, Coins: map[string]int{}},
 				{Name: "Fred", CoinPriority: 2, Coins: map[string]int{}},
@@ -54,7 +52,7 @@ func TestGetFirstCoinPriority(t *testing.T) {
 		},
 		{
 			name: "lowest priority is last in slice",
-			members: []models.Member{
+			members: []Member{
 				{Name: "Keg", CoinPriority: 2, Coins: map[string]int{}},
 				{Name: "Rowan", CoinPriority: 1, Coins: map[string]int{}},
 				{Name: "Fred", CoinPriority: 0, Coins: map[string]int{}},
@@ -63,7 +61,7 @@ func TestGetFirstCoinPriority(t *testing.T) {
 		},
 		{
 			name: "lowest priority is in the middle",
-			members: []models.Member{
+			members: []Member{
 				{Name: "Keg", CoinPriority: 2, Coins: map[string]int{}},
 				{Name: "Rowan", CoinPriority: 0, Coins: map[string]int{}},
 				{Name: "Fred", CoinPriority: 1, Coins: map[string]int{}},
@@ -72,7 +70,7 @@ func TestGetFirstCoinPriority(t *testing.T) {
 		},
 		{
 			name: "duplicate minimum priorities — returns first occurrence",
-			members: []models.Member{
+			members: []Member{
 				{Name: "Keg", CoinPriority: 0, Coins: map[string]int{}},
 				{Name: "Rowan", CoinPriority: 0, Coins: map[string]int{}},
 				{Name: "Fred", CoinPriority: 1, Coins: map[string]int{}},
@@ -81,7 +79,7 @@ func TestGetFirstCoinPriority(t *testing.T) {
 		},
 		{
 			name: "all members share the same priority",
-			members: []models.Member{
+			members: []Member{
 				{Name: "Keg", CoinPriority: 3, Coins: map[string]int{}},
 				{Name: "Rowan", CoinPriority: 3, Coins: map[string]int{}},
 				{Name: "Fred", CoinPriority: 3, Coins: map[string]int{}},
@@ -91,7 +89,7 @@ func TestGetFirstCoinPriority(t *testing.T) {
 		{
 			// negative priority values are not prevented by the model
 			name: "negative priority values",
-			members: []models.Member{
+			members: []Member{
 				{Name: "Keg", CoinPriority: -1, Coins: map[string]int{}},
 				{Name: "Rowan", CoinPriority: 0, Coins: map[string]int{}},
 				{Name: "Fred", CoinPriority: 1, Coins: map[string]int{}},
@@ -101,7 +99,7 @@ func TestGetFirstCoinPriority(t *testing.T) {
 		{
 			// duplicate member names — the model has no name uniqueness constraint
 			name: "duplicate names — lowest priority is second occurrence",
-			members: []models.Member{
+			members: []Member{
 				{Name: "fake", CoinPriority: 1, Coins: map[string]int{}},
 				{Name: "fake", CoinPriority: 0, Coins: map[string]int{}},
 			},
@@ -109,14 +107,14 @@ func TestGetFirstCoinPriority(t *testing.T) {
 		},
 		{
 			name:    "empty party",
-			members: []models.Member{},
+			members: []Member{},
 			want:    -1, // should just use a sentinel value as obviously wrong return
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := &models.Party{ActiveMembers: tt.members}
+			p := &Party{ActiveMembers: tt.members}
 
 			got := GetFirstCoinPriority(p)
 			assert.Equal(t, tt.want, got)
@@ -126,8 +124,8 @@ func TestGetFirstCoinPriority(t *testing.T) {
 
 func TestDistributeCoins(t *testing.T) {
 	// Create a mock party with 3 members
-	party := models.Party{
-		ActiveMembers: []models.Member{
+	party := Party{
+		ActiveMembers: []Member{
 			{Name: "Keg", CoinPriority: 0, Coins: make(map[string]int)},
 			{Name: "Rowan", CoinPriority: 1, Coins: make(map[string]int)},
 			{Name: "Fred", CoinPriority: 2, Coins: make(map[string]int)},
@@ -136,11 +134,11 @@ func TestDistributeCoins(t *testing.T) {
 
 	// Coins to distribute
 	money := map[string]int{
-		models.Platinum: 10,
-		models.Gold:     8,
-		models.Electrum: 7,
-		models.Silver:   5,
-		models.Copper:   3,
+		Platinum: 10,
+		Gold:     8,
+		Electrum: 7,
+		Silver:   5,
+		Copper:   3,
 	}
 
 	// Call the function to distribute the coins
@@ -165,27 +163,27 @@ func TestDistributeCoins(t *testing.T) {
 		t.Run(test.memberName, func(t *testing.T) {
 			member := getMemberByName(party.ActiveMembers, test.memberName)
 
-			if member.Coins[models.Platinum] != test.expectedPlatinum {
-				t.Errorf("%s's platinum: expected %d, got %d", test.memberName, test.expectedPlatinum, member.Coins[models.Platinum])
+			if member.Coins[Platinum] != test.expectedPlatinum {
+				t.Errorf("%s's platinum: expected %d, got %d", test.memberName, test.expectedPlatinum, member.Coins[Platinum])
 			}
-			if member.Coins[models.Gold] != test.expectedGold {
-				t.Errorf("%s's gold: expected %d, got %d", test.memberName, test.expectedGold, member.Coins[models.Gold])
+			if member.Coins[Gold] != test.expectedGold {
+				t.Errorf("%s's gold: expected %d, got %d", test.memberName, test.expectedGold, member.Coins[Gold])
 			}
-			if member.Coins[models.Electrum] != test.expectedElectrum {
-				t.Errorf("%s's electrum: expected %d, got %d", test.memberName, test.expectedElectrum, member.Coins[models.Electrum])
+			if member.Coins[Electrum] != test.expectedElectrum {
+				t.Errorf("%s's electrum: expected %d, got %d", test.memberName, test.expectedElectrum, member.Coins[Electrum])
 			}
-			if member.Coins[models.Silver] != test.expectedSilver {
-				t.Errorf("%s's silver: expected %d, got %d", test.memberName, test.expectedSilver, member.Coins[models.Silver])
+			if member.Coins[Silver] != test.expectedSilver {
+				t.Errorf("%s's silver: expected %d, got %d", test.memberName, test.expectedSilver, member.Coins[Silver])
 			}
-			if member.Coins[models.Copper] != test.expectedCopper {
-				t.Errorf("%s's copper: expected %d, got %d", test.memberName, test.expectedCopper, member.Coins[models.Copper])
+			if member.Coins[Copper] != test.expectedCopper {
+				t.Errorf("%s's copper: expected %d, got %d", test.memberName, test.expectedCopper, member.Coins[Copper])
 			}
 		})
 	}
 }
 
 // Helper function to get PartyMember by name
-func getMemberByName(members []models.Member, name string) *models.Member {
+func getMemberByName(members []Member, name string) *Member {
 	for i := range members {
 		if members[i].Name == name {
 			return &members[i]

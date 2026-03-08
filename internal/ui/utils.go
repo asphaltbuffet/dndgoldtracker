@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"dndgoldtracker/models"
+	"dndgoldtracker/internal/party"
 	"dndgoldtracker/storage"
 
 	"charm.land/bubbles/v2/table"
@@ -22,18 +22,18 @@ func checkbox(label string, checked bool) string {
 }
 
 // Convert members to table rows
-func membersToRows(members []models.Member) []table.Row {
+func membersToRows(members []party.Member) []table.Row {
 	rows := make([]table.Row, 0, len(members))
 	for _, m := range members {
 		rows = append(rows, table.Row{
 			m.Name,
 			strconv.Itoa(m.XP),
 			strconv.Itoa(m.Level),
-			strconv.Itoa(m.Coins[models.Platinum]),
-			strconv.Itoa(m.Coins[models.Gold]),
-			strconv.Itoa(m.Coins[models.Electrum]),
-			strconv.Itoa(m.Coins[models.Silver]),
-			strconv.Itoa(m.Coins[models.Copper]),
+			strconv.Itoa(m.Coins[party.Platinum]),
+			strconv.Itoa(m.Coins[party.Gold]),
+			strconv.Itoa(m.Coins[party.Electrum]),
+			strconv.Itoa(m.Coins[party.Silver]),
+			strconv.Itoa(m.Coins[party.Copper]),
 		})
 	}
 	return rows
@@ -76,16 +76,16 @@ func configureInputs(placeholders []string) []textinput.Model {
 	return i
 }
 
-func configureTable(members []models.Member) table.Model {
+func configureTable(members []party.Member) table.Model {
 	columns := []table.Column{
 		{Title: name, Width: 10},
 		{Title: xp, Width: 6},
 		{Title: level, Width: 6},
-		{Title: models.Platinum, Width: 10},
-		{Title: models.Gold, Width: 6},
-		{Title: models.Electrum, Width: 10},
-		{Title: models.Silver, Width: 8},
-		{Title: models.Copper, Width: 8},
+		{Title: party.Platinum, Width: 10},
+		{Title: party.Gold, Width: 6},
+		{Title: party.Electrum, Width: 10},
+		{Title: party.Silver, Width: 8},
+		{Title: party.Copper, Width: 8},
 	}
 
 	rows := membersToRows(members)
@@ -136,7 +136,7 @@ func focusTable(t *table.Model) {
 	t.SetStyles(s)
 }
 
-func updateTableData(members []models.Member, t *table.Model) *table.Model {
+func updateTableData(members []party.Member, t *table.Model) *table.Model {
 	rows := membersToRows(members)
 	t.SetRows(rows)
 	return t

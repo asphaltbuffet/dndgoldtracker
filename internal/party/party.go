@@ -1,4 +1,4 @@
-package models
+package party
 
 import "fmt"
 

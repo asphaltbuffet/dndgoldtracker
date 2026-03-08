@@ -3,7 +3,7 @@ package ui
 import (
 	"testing"
 
-	"dndgoldtracker/models"
+	"dndgoldtracker/internal/party"
 
 	"charm.land/bubbles/v2/textinput"
 	"github.com/stretchr/testify/assert"
@@ -19,18 +19,18 @@ func TestCheckbox(t *testing.T) {
 
 func TestMembersToRows(t *testing.T) {
 	t.Run("empty slice returns empty rows", func(t *testing.T) {
-		rows := membersToRows([]models.Member{})
+		rows := membersToRows([]party.Member{})
 		assert.Empty(t, rows)
 	})
 
 	t.Run("one member per row", func(t *testing.T) {
-		members := []models.Member{
+		members := []party.Member{
 			{Name: "Keg", Level: 3, XP: 900, Coins: map[string]int{
-				models.Platinum: 1,
-				models.Gold:     2,
-				models.Electrum: 3,
-				models.Silver:   4,
-				models.Copper:   5,
+				party.Platinum: 1,
+				party.Gold:     2,
+				party.Electrum: 3,
+				party.Silver:   4,
+				party.Copper:   5,
 			}},
 			{Name: "Rowan", Level: 1, XP: 0, Coins: map[string]int{}},
 		}
@@ -39,19 +39,19 @@ func TestMembersToRows(t *testing.T) {
 	})
 
 	t.Run("row columns match member data", func(t *testing.T) {
-		member := models.Member{
+		member := party.Member{
 			Name:  "Keg",
 			Level: 3,
 			XP:    900,
 			Coins: map[string]int{
-				models.Platinum: 1,
-				models.Gold:     2,
-				models.Electrum: 3,
-				models.Silver:   4,
-				models.Copper:   5,
+				party.Platinum: 1,
+				party.Gold:     2,
+				party.Electrum: 3,
+				party.Silver:   4,
+				party.Copper:   5,
 			},
 		}
-		rows := membersToRows([]models.Member{member})
+		rows := membersToRows([]party.Member{member})
 		assert.Len(t, rows, 1)
 		row := rows[0]
 		assert.Equal(t, "Keg", row[0], "Name field")
@@ -65,8 +65,8 @@ func TestMembersToRows(t *testing.T) {
 	})
 
 	t.Run("zero-value coins render as 0", func(t *testing.T) {
-		member := models.Member{Name: "Fred", Coins: map[string]int{}}
-		rows := membersToRows([]models.Member{member})
+		member := party.Member{Name: "Fred", Coins: map[string]int{}}
+		rows := membersToRows([]party.Member{member})
 		assert.Equal(t, "0", rows[0][3], "Platinum default of zero")
 	})
 }
@@ -113,7 +113,6 @@ func TestUpdateFocusIndex(t *testing.T) {
 }
 
 func TestBuildInputList(t *testing.T) {
-
 	t.Run("contains Submit button text", func(t *testing.T) {
 		inputs := makeInputs(t, 2)
 		out := buildInputList(inputs, 0, false)

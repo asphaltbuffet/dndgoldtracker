@@ -1,14 +1,14 @@
 package storage
 
 import (
-	"dndgoldtracker/models"
+	"dndgoldtracker/internal/party"
 	"encoding/json"
 	"os"
 )
 
 // SaveParty writes party data to a JSON file
-func SaveParty(party *models.Party) error {
-	data, err := json.MarshalIndent(party, "", "  ")
+func SaveParty(p *party.Party) error {
+	data, err := json.MarshalIndent(p, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -16,12 +16,12 @@ func SaveParty(party *models.Party) error {
 }
 
 // LoadParty loads party data from a JSON file
-func LoadParty() (models.Party, error) {
+func LoadParty() (party.Party, error) {
 	data, err := os.ReadFile("party.json")
 	if err != nil {
-		return models.Party{}, err
+		return party.Party{}, err
 	}
-	var party models.Party
-	err = json.Unmarshal(data, &party)
-	return party, err
+	var p party.Party
+	err = json.Unmarshal(data, &p)
+	return p, err
 }
