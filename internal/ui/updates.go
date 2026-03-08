@@ -95,7 +95,8 @@ func updateMoney(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		}
 	}
 	// Handle character input and blinking
-	cmd := m.updateInputs(msg, m.coinInputs)
+	var cmd tea.Cmd
+	m.coinInputs, cmd = updateInputs(msg, m.coinInputs)
 
 	return m, cmd
 }
@@ -146,7 +147,8 @@ func updateExperience(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		}
 	}
 	// Handle character input and blinking
-	cmd := m.updateInputs(msg, m.xpInputs)
+	var cmd tea.Cmd
+	m.xpInputs, cmd = updateInputs(msg, m.xpInputs)
 
 	return m, cmd
 }
@@ -212,7 +214,8 @@ func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		}
 	}
 	// Handle character input and blinking
-	cmd := m.updateInputs(msg, m.memberInputs)
+	var cmd tea.Cmd
+	m.memberInputs, cmd = updateInputs(msg, m.memberInputs)
 
 	return m, cmd
 }

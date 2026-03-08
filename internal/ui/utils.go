@@ -39,7 +39,7 @@ func membersToRows(members []party.Member) []table.Row {
 	return rows
 }
 
-func (m model) updateInputs(msg tea.Msg, inputs []textinput.Model) tea.Cmd {
+func updateInputs(msg tea.Msg, inputs []textinput.Model) ([]textinput.Model, tea.Cmd) {
 	cmds := make([]tea.Cmd, len(inputs))
 
 	// Only text inputs with Focus() set will respond, so it's safe to simply
@@ -48,7 +48,7 @@ func (m model) updateInputs(msg tea.Msg, inputs []textinput.Model) tea.Cmd {
 		inputs[i], cmds[i] = inputs[i].Update(msg)
 	}
 
-	return tea.Batch(cmds...)
+	return inputs, tea.Batch(cmds...)
 }
 
 func configureInputs(placeholders []string) []textinput.Model {
