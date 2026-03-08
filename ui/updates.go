@@ -1,8 +1,7 @@
 package ui
 
 import (
-	"fmt"
-	"log"
+	"log/slog"
 	"slices"
 	"strconv"
 
@@ -68,11 +67,13 @@ func updateMoney(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 				for i := range models.CoinOrder {
 					coinMap[models.CoinOrder[i]], err = strconv.Atoi(m.coinInputs[i].Value())
-					log.Printf("CoinMap entry for %s: %d\n", models.CoinOrder[i], coinMap[models.CoinOrder[i]])
 					if err != nil {
-						fmt.Printf("Invalid input for %s, try again\n", models.CoinOrder[i])
+						slog.Error("invalid coin value", "type", models.CoinOrder[i], "input", m.coinInputs[i].Value(), "err", err)
+
 						return m, nil
 					}
+
+					slog.Debug("coin input parsed", "type", models.CoinOrder[i], "amount", coinMap[models.CoinOrder[i]])
 				}
 
 				// Distribute the coins to the party
@@ -85,12 +86,12 @@ func updateMoney(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			// Cycle indexes
 		case "tab", "down":
 			m.coinFocusIndex++
-			log.Printf("coinFocusIndex = %d", m.coinFocusIndex)
+			slog.Debug("focus changed", "index", m.coinFocusIndex, "input", "coin")
 			cmds := updateFocusIndex(&m.coinFocusIndex, m.coinInputs)
 			return m, tea.Batch(cmds...)
 		case "up", "shift+tab":
 			m.coinFocusIndex--
-			log.Printf("coinFocusIndex = %d", m.coinFocusIndex)
+			slog.Debug("focus changed", "index", m.coinFocusIndex, "input", "coin")
 			cmds := updateFocusIndex(&m.coinFocusIndex, m.coinInputs)
 			return m, tea.Batch(cmds...)
 		}
@@ -122,9 +123,12 @@ func updateExperience(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 				xp, err := strconv.Atoi(m.xpInputs[0].Value())
 				if err != nil {
-					log.Println("Invalid input for experience, try again")
+					slog.Error("invalid XP input", "input", m.xpInputs[0].Value(), "err", err)
+
 					return m, nil
 				}
+
+				slog.Debug("parsed xp input", "xp", xp)
 
 				commands.DistributeExperience(&m.party, xp)
 				saveUpdateReset(&m)
@@ -132,10 +136,12 @@ func updateExperience(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				m.chosen = false
 				return m, nil
 			}
+
 		case "tab", "down":
 			m.xpFocusIndex++
 			cmds := updateFocusIndex(&m.xpFocusIndex, m.xpInputs)
 			return m, tea.Batch(cmds...)
+
 		case "up", "shift+tab":
 			m.xpFocusIndex--
 			cmds := updateFocusIndex(&m.xpFocusIndex, m.xpInputs)
@@ -166,7 +172,7 @@ func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			if m.memberFocusIndex == len(m.memberInputs) {
 				var err error
 				if m.memberInputs[0].Value() == "" {
-					log.Println("Name value required, try again")
+					slog.Warn("member name is required")
 					m.chosen = false
 					return m, nil
 				}
@@ -175,7 +181,7 @@ func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				handleUnsetInputs(m.memberInputs)
 				xp, err := strconv.Atoi(m.memberInputs[1].Value())
 				if err != nil {
-					log.Println("Error occurred with xp, try again")
+					slog.Warn("invalid XP value for new member")
 					return m, nil
 				}
 
@@ -184,7 +190,7 @@ func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				for i := range newMemberCoins {
 					newMemberMoney[newMemberCoins[i].Placeholder], err = strconv.Atoi(newMemberCoins[i].Value())
 					if err != nil {
-						log.Printf("Error occurred with %s. Please try again", newMemberCoins[i].Placeholder)
+						slog.Warn("invalid coin value for new member", "field", newMemberCoins[i].Placeholder)
 						return m, nil
 					}
 				}
@@ -199,12 +205,12 @@ func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		// Cycle indexes
 		case "tab", "down":
 			m.memberFocusIndex++
-			log.Printf("memberFocusIndex = %d", m.memberFocusIndex)
+			slog.Debug("focus changed", "index", m.memberFocusIndex, "input", "member")
 			cmds := updateFocusIndex(&m.memberFocusIndex, m.memberInputs)
 			return m, tea.Batch(cmds...)
 		case "up", "shift+tab":
 			m.memberFocusIndex--
-			log.Printf("memberFocusIndex = %d", m.memberFocusIndex)
+			slog.Debug("focus changed", "index", m.memberFocusIndex, "input", "member")
 			cmds := updateFocusIndex(&m.memberFocusIndex, m.memberInputs)
 			return m, tea.Batch(cmds...)
 		}
@@ -248,27 +254,31 @@ func updateActivateMembers(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				unselectedMembers = &m.party.ActiveMembers
 			}
 			// activate/deactivate member
-			if len(selectedTable.SelectedRow()) <= 0 {
+			if len(selectedTable.SelectedRow()) == 0 {
 				// Unselected cursor or empty table
 				// Set cursor to first element and return
-				log.Println("Unselected cursor thing")
+				slog.Debug("no row selected, resetting cursor")
 				selectedTable.SetCursor(0)
 				return m, nil
 			}
 
 			memberName := selectedTable.SelectedRow()[0]
-			if m.activeMemberTable.Focused() {
-				log.Printf("Moving %s from %s to %s", memberName, "Active", "Inactive")
-			} else {
-				log.Printf("Moving %s from %s to %s", memberName, "Inactive", "Active")
+			from, to := "Active", "Inactive"
+			if !m.activeMemberTable.Focused() {
+				from, to = "Inactive", "Active"
 			}
+			slog.Info("moving member", "name", memberName, "from", from, "to", to)
 
 			memberIndex := slices.IndexFunc(*selectedMembers, func(m models.Member) bool { return m.Name == memberName })
 			commands.ChangeMemberGroup(selectedMembers, unselectedMembers, memberIndex)
 			m.activeMemberTable.SetRows(membersToRows(m.party.ActiveMembers))
 			m.inactiveMemberTable.SetRows(membersToRows(m.party.InactiveMembers))
 		case "s":
-			_ = storage.SaveParty(&m.party)
+			err := storage.SaveParty(&m.party)
+			if err != nil {
+				slog.Error("failed to save party data", "err", err)
+			}
+
 			blurTable(&m.activeMemberTable)
 			m.chosen = false
 		}
