@@ -54,15 +54,19 @@ func DistributeCoins(p *Party, money map[Coin]int) {
 			p.ActiveMembers[i].Coins[coinType] += each
 		}
 
-		// TODO: This shouldn't sort member order in place. Make a copy first.
-		// Sort members by priority for distributing the remainder
-		sort.Slice(p.ActiveMembers, func(i, j int) bool {
-			return p.ActiveMembers[i].CoinPriority < p.ActiveMembers[j].CoinPriority
+		// Build a priority-ordered index slice to distribute remainder without
+		// reordering ActiveMembers in place.
+		order := make([]int, numMembers)
+		for i := range order {
+			order[i] = i
+		}
+		sort.Slice(order, func(i, j int) bool {
+			return p.ActiveMembers[order[i]].CoinPriority < p.ActiveMembers[order[j]].CoinPriority
 		})
 
 		// Distribute excess coins based on priority
 		for i := range remainder {
-			p.ActiveMembers[i].Coins[coinType]++
+			p.ActiveMembers[order[i]].Coins[coinType]++
 		}
 
 		// Rotate priority to balance future distributions
