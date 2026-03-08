@@ -5,8 +5,8 @@ import (
 	"slices"
 	"strconv"
 
-	party "dndgoldtracker/internal/party"
-	"dndgoldtracker/storage"
+	"dndgoldtracker/internal/party"
+	"dndgoldtracker/internal/storage"
 
 	"charm.land/bubbles/v2/table"
 	tea "charm.land/bubbletea/v2"

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"dndgoldtracker/internal/party"
-	"dndgoldtracker/storage"
+	"dndgoldtracker/internal/storage"
 
 	"charm.land/bubbles/v2/table"
 	"charm.land/bubbles/v2/textinput"
