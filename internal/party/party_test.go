@@ -26,6 +26,20 @@ func TestDistributeExperience(t *testing.T) {
 	}
 }
 
+func TestAddMember(t *testing.T) {
+	t.Run("level computed from starting XP", func(t *testing.T) {
+		p := Party{}
+		p.AddMember("Keg", 900, nil) // 900 XP = level 3 (threshold at index 2)
+		assert.Equal(t, 3, p.ActiveMembers[0].Level)
+	})
+
+	t.Run("zero XP starts at level 1", func(t *testing.T) {
+		p := Party{}
+		p.AddMember("Rowan", 0, nil)
+		assert.Equal(t, 1, p.ActiveMembers[0].Level)
+	})
+}
+
 func TestDistributeExperienceEmptyParty(t *testing.T) {
 	p := Party{}
 	assert.NotPanics(t, func() { p.DistributeExperience(100) })

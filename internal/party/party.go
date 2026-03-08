@@ -21,9 +21,10 @@ func (p *Party) AddMember(name string, xp int, money map[Coin]int) {
 		CoinPriority: len(p.ActiveMembers),
 	}
 
-	slog.Info("new party member", "name", m.Name)
-
 	p.ActiveMembers = append(p.ActiveMembers, m)
+	p.ActiveMembers[len(p.ActiveMembers)-1].UpdateLevel()
+
+	slog.Info("new party member", "name", m.Name, "level", p.ActiveMembers[len(p.ActiveMembers)-1].Level)
 }
 
 // DistributeCoins distributes coins fairly among party members in a fixed order
