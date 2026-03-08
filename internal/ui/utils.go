@@ -8,11 +8,10 @@ import (
 	"dndgoldtracker/models"
 	"dndgoldtracker/storage"
 
-	"github.com/charmbracelet/bubbles/cursor"
-	"github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/table"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 func checkbox(label string, checked bool) string {
@@ -57,17 +56,20 @@ func configureInputs(placeholders []string) []textinput.Model {
 	var t textinput.Model
 	for j := range i {
 		t = textinput.New()
-		t.Cursor.Style = cursorStyle
 		t.CharLimit = 32
 		t.Placeholder = placeholders[j]
+		t.SetWidth(20)
+
+		s := textinput.DefaultStyles(false)
 
 		// Focus the first element
 		if j == 0 {
 			t.Focus()
-			t.PromptStyle = focusedStyle
-			t.TextStyle = focusedStyle
+			s.Focused.Prompt = focusedStyle
+			s.Focused.Text = focusedStyle
 		}
 
+		t.SetStyles(s)
 		i[j] = t
 	}
 
@@ -92,6 +94,7 @@ func configureTable(members []models.Member) table.Model {
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithHeight(5),
+		table.WithWidth(80),
 	)
 
 	s := table.DefaultStyles()
@@ -145,7 +148,7 @@ func resetInputs(inputs []textinput.Model) {
 	}
 }
 
-func buildInputList(inputs []textinput.Model, focusIndex int, cursorMode cursor.Mode) string {
+func buildInputList(inputs []textinput.Model, focusIndex int, virtualCursor bool) string {
 	var msg strings.Builder
 	for i := range inputs {
 		msg.WriteString(inputs[i].View())
@@ -160,8 +163,12 @@ func buildInputList(inputs []textinput.Model, focusIndex int, cursorMode cursor.
 	}
 	fmt.Fprintf(&msg, "\n\n%s\n\n", *button)
 
+	cursorModeStr := "real"
+	if virtualCursor {
+		cursorModeStr = "virtual"
+	}
 	msg.WriteString(helpStyle.Render("cursor mode is "))
-	msg.WriteString(cursorModeHelpStyle.Render(cursorMode.String()))
+	msg.WriteString(cursorModeHelpStyle.Render(cursorModeStr))
 	msg.WriteString(helpStyle.Render(" (ctrl+r to change style)"))
 
 	return msg.String()
@@ -183,16 +190,12 @@ func saveUpdateReset(m *model) {
 	resetInputs(m.memberInputs)
 }
 
-func changeCursorMode(inputs []textinput.Model, cursorMode *cursor.Mode) []tea.Cmd {
-	*cursorMode++
-	if *cursorMode > cursor.CursorHide {
-		*cursorMode = cursor.CursorBlink
-	}
-	cmds := make([]tea.Cmd, len(inputs))
+// changeCursorMode toggles between virtual (blinking) and real terminal cursor.
+func changeCursorMode(inputs []textinput.Model, virtualCursor *bool) {
+	*virtualCursor = !*virtualCursor
 	for i := range inputs {
-		cmds[i] = inputs[i].Cursor.SetMode(*cursorMode)
+		inputs[i].SetVirtualCursor(*virtualCursor)
 	}
-	return cmds
 }
 
 func updateFocusIndex(focusIndex *int, inputs []textinput.Model) []tea.Cmd {
@@ -207,14 +210,18 @@ func updateFocusIndex(focusIndex *int, inputs []textinput.Model) []tea.Cmd {
 		if i == *focusIndex {
 			// Set focused state
 			cmds[i] = inputs[i].Focus()
-			inputs[i].PromptStyle = focusedStyle
-			inputs[i].TextStyle = focusedStyle
+			s := inputs[i].Styles()
+			s.Focused.Prompt = focusedStyle
+			s.Focused.Text = focusedStyle
+			inputs[i].SetStyles(s)
 			continue
 		}
 		// Remove focused state
 		inputs[i].Blur()
-		inputs[i].PromptStyle = noStyle
-		inputs[i].TextStyle = noStyle
+		s := inputs[i].Styles()
+		s.Focused.Prompt = noStyle
+		s.Focused.Text = noStyle
+		inputs[i].SetStyles(s)
 	}
 
 	return cmds

@@ -5,11 +5,10 @@ import (
 	"dndgoldtracker/storage"
 	"fmt"
 
-	"github.com/charmbracelet/bubbles/cursor"
-	"github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/table"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 const (
@@ -26,7 +25,6 @@ var (
 	dotStyle            = lipgloss.NewStyle().Foreground(lipgloss.Color("236")).Render(dotChar)
 	focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	cursorStyle         = focusedStyle
 	noStyle             = lipgloss.NewStyle()
 	helpStyle           = blurredStyle
 	cursorModeHelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
@@ -49,7 +47,7 @@ type model struct {
 	xpInputs            []textinput.Model
 	memberFocusIndex    int
 	memberInputs        []textinput.Model
-	cursorMode          cursor.Mode
+	virtualCursor       bool
 	quitting            bool
 }
 
@@ -77,6 +75,7 @@ func NewModel() model {
 		coinInputs:          ci,
 		xpInputs:            xi,
 		memberInputs:        mi,
+		virtualCursor:       true,
 	}
 }
 
@@ -84,7 +83,7 @@ func (m model) Init() tea.Cmd { return nil }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Make sure these keys always quit
-	if msg, ok := msg.(tea.KeyMsg); ok {
+	if msg, ok := msg.(tea.KeyPressMsg); ok {
 		k := msg.String()
 		if k == "ctrl+c" || (k == "q" && !m.chosen) {
 			m.quitting = true
@@ -128,10 +127,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // The main view, which just calls the appropriate sub-view
-func (m model) View() string {
+func (m model) View() tea.View {
 	var s string
 	if m.quitting {
-		return "\n  See you later!\n\n"
+		return tea.NewView("\n  See you later!\n\n")
 	}
 
 	if !m.chosen {
@@ -151,5 +150,5 @@ func (m model) View() string {
 		}
 	}
 
-	return baseStyle.Render("\n" + s + "\n\n")
+	return tea.NewView(baseStyle.Render("\n" + s + "\n\n"))
 }
