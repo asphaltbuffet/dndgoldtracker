@@ -26,6 +26,11 @@ func TestDistributeExperience(t *testing.T) {
 	}
 }
 
+func TestDistributeExperienceEmptyParty(t *testing.T) {
+	p := Party{}
+	assert.NotPanics(t, func() { p.DistributeExperience(100) })
+}
+
 func TestGetFirstCoinPriority(t *testing.T) {
 	tests := []struct {
 		name    string

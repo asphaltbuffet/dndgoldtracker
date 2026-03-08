@@ -28,6 +28,11 @@ var XpThresholds = []int{
 
 // DistributeExperience distributes XP and checks for level-ups
 func (p *Party) DistributeExperience(xp int) {
+	if len(p.ActiveMembers) == 0 {
+		slog.Warn("did not distribute experience", "xp", xp)
+		return
+	}
+
 	splitXP := xp / len(p.ActiveMembers)
 	extraXP := xp % len(p.ActiveMembers)
 
