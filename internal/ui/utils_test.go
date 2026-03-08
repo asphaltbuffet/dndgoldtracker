@@ -25,14 +25,14 @@ func TestMembersToRows(t *testing.T) {
 
 	t.Run("one member per row", func(t *testing.T) {
 		members := []party.Member{
-			{Name: "Keg", Level: 3, XP: 900, Coins: map[string]int{
+			{Name: "Keg", Level: 3, XP: 900, Coins: map[party.Coin]int{
 				party.Platinum: 1,
 				party.Gold:     2,
 				party.Electrum: 3,
 				party.Silver:   4,
 				party.Copper:   5,
 			}},
-			{Name: "Rowan", Level: 1, XP: 0, Coins: map[string]int{}},
+			{Name: "Rowan", Level: 1, XP: 0, Coins: map[party.Coin]int{}},
 		}
 		rows := membersToRows(members)
 		assert.Len(t, rows, 2)
@@ -43,7 +43,7 @@ func TestMembersToRows(t *testing.T) {
 			Name:  "Keg",
 			Level: 3,
 			XP:    900,
-			Coins: map[string]int{
+			Coins: map[party.Coin]int{
 				party.Platinum: 1,
 				party.Gold:     2,
 				party.Electrum: 3,
@@ -65,7 +65,7 @@ func TestMembersToRows(t *testing.T) {
 	})
 
 	t.Run("zero-value coins render as 0", func(t *testing.T) {
-		member := party.Member{Name: "Fred", Coins: map[string]int{}}
+		member := party.Member{Name: "Fred", Coins: map[party.Coin]int{}}
 		rows := membersToRows([]party.Member{member})
 		assert.Equal(t, "0", rows[0][3], "Platinum default of zero")
 	})

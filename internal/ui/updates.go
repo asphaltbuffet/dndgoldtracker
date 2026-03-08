@@ -59,7 +59,7 @@ func updateMoney(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			// If so, Distribute money.
 			if m.coinFocusIndex == len(m.coinInputs) {
 				var err error
-				coinMap := make(map[string]int)
+				coinMap := make(map[party.Coin]int)
 				// Set any unset values to 0
 				handleUnsetInputs(m.coinInputs)
 
@@ -127,7 +127,7 @@ func updateExperience(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 				slog.Debug("parsed xp input", "xp", xp)
 
-				party.DistributeExperience(&m.party, xp)
+				m.party.DistributeExperience(xp)
 				saveUpdateReset(&m)
 
 				m.chosen = false
@@ -182,9 +182,9 @@ func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				}
 
 				newMemberCoins := m.memberInputs[2:len(m.memberInputs)]
-				newMemberMoney := make(map[string]int)
+				newMemberMoney := make(map[party.Coin]int)
 				for i := range newMemberCoins {
-					newMemberMoney[newMemberCoins[i].Placeholder], err = strconv.Atoi(newMemberCoins[i].Value())
+					newMemberMoney[party.Coin(i)], err = strconv.Atoi(newMemberCoins[i].Value())
 					if err != nil {
 						slog.Warn("invalid coin value for new member", "field", newMemberCoins[i].Placeholder)
 						return m, nil
@@ -192,7 +192,7 @@ func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				}
 
 				// Add the new party Member
-				party.AddMember(&m.party, name, xp, newMemberMoney)
+				m.party.AddMember(name, xp, newMemberMoney)
 				saveUpdateReset(&m)
 
 				m.chosen = false

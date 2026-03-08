@@ -1,42 +1,99 @@
 package party
 
-import "fmt"
-
-const (
-	// Coin types
-	Platinum string = "Platinum"
-	Gold     string = "Gold"
-	Electrum string = "Electrum"
-	Silver   string = "Silver"
-	Copper   string = "Copper"
+import (
+	"fmt"
+	"log/slog"
+	"sort"
 )
-
-var (
-	// Define the fixed order of coins
-	CoinOrder    = []string{Platinum, Gold, Electrum, Silver, Copper}
-	XpThresholds = []int{0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000, 85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000} // XP values taken for D&D 5e
-)
-
-type Member struct {
-	Name         string
-	Level        int
-	XP           int
-	Coins        map[string]int
-	CoinPriority int
-}
 
 type Party struct {
 	ActiveMembers   []Member
 	InactiveMembers []Member
 }
 
-// Display prints the current party state
-func (p *Party) Display() {
-	fmt.Println("\n=== Party Members ===")
-	for _, member := range p.ActiveMembers {
-		fmt.Printf("%s (Level %d) - XP: %d, Wallet:%dPP %dGP %dEP %dSP %dCP \n",
-			member.Name, member.Level, member.XP,
-			member.Coins[Platinum], member.Coins[Gold], member.Coins[Electrum],
-			member.Coins[Silver], member.Coins[Copper])
+// AddMember creates a new party member in the active member list and gives them last Coin Priority
+func (p *Party) AddMember(name string, xp int, money map[Coin]int) {
+	m := Member{
+		Name:         name,
+		Level:        0,
+		XP:           xp,
+		Coins:        money,
+		CoinPriority: len(p.ActiveMembers),
 	}
+
+	slog.Info("new party member", "name", m.Name)
+
+	p.ActiveMembers = append(p.ActiveMembers, m)
+}
+
+// DistributeCoins distributes coins fairly among party members in a fixed order
+// Hands extras out one at a time and rotates coin priority
+func DistributeCoins(p *Party, money map[Coin]int) {
+	numMembers := len(p.ActiveMembers)
+	if numMembers == 0 {
+		slog.Warn("did not distribute money", "party", p, "money", money)
+		return
+	}
+
+	// Initialize coin maps if not already set
+	for i := range p.ActiveMembers {
+		if p.ActiveMembers[i].Coins == nil {
+			p.ActiveMembers[i].Coins = make(map[Coin]int)
+		}
+	}
+
+	// Helper function to distribute a specific coin type
+	distributeCoin := func(coinType Coin, coinAmount int) {
+		each := coinAmount / numMembers
+		remainder := coinAmount % numMembers
+
+		// Assign evenly to each member
+		for i := range p.ActiveMembers {
+			slog.Debug("adding coins", "amount", each, "type", coinType, "member", p.ActiveMembers[i].Name)
+			p.ActiveMembers[i].Coins[coinType] += each
+		}
+
+		// TODO: This shouldn't sort member order in place. Make a copy first.
+		// Sort members by priority for distributing the remainder
+		sort.Slice(p.ActiveMembers, func(i, j int) bool {
+			return p.ActiveMembers[i].CoinPriority < p.ActiveMembers[j].CoinPriority
+		})
+
+		// Distribute excess coins based on priority
+		for i := range remainder {
+			p.ActiveMembers[i].Coins[coinType]++
+		}
+
+		// Rotate priority to balance future distributions
+		for i := range p.ActiveMembers {
+			p.ActiveMembers[i].CoinPriority = (p.ActiveMembers[i].CoinPriority + 1) % numMembers
+		}
+	}
+
+	// Distribute coins in the predefined order
+	for _, coinType := range CoinOrder {
+		amount, exists := money[coinType]
+		slog.Info("distributing coin", "type", coinType, "amount", amount)
+
+		if exists {
+			distributeCoin(coinType, amount)
+		}
+	}
+}
+
+// GetFirstCoinPriority returns a member of the party with the lowest priority.
+// returns -1 if there are no members
+func GetFirstCoinPriority(p *Party) int {
+	if len(p.ActiveMembers) == 0 {
+		return -1
+	}
+	minIdx := 0
+
+	for i := range p.ActiveMembers {
+		if p.ActiveMembers[i].CoinPriority < p.ActiveMembers[minIdx].CoinPriority {
+			minIdx = i
+		}
+	}
+
+	return minIdx
 }

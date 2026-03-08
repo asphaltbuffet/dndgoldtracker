@@ -81,11 +81,11 @@ func configureTable(members []party.Member) table.Model {
 		{Title: name, Width: 10},
 		{Title: xp, Width: 6},
 		{Title: level, Width: 6},
-		{Title: party.Platinum, Width: 10},
-		{Title: party.Gold, Width: 6},
-		{Title: party.Electrum, Width: 10},
-		{Title: party.Silver, Width: 8},
-		{Title: party.Copper, Width: 8},
+		{Title: party.Platinum.String(), Width: 10},
+		{Title: party.Gold.String(), Width: 6},
+		{Title: party.Electrum.String(), Width: 10},
+		{Title: party.Silver.String(), Width: 8},
+		{Title: party.Copper.String(), Width: 8},
 	}
 
 	rows := membersToRows(members)

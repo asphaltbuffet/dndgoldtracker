@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"log/slog"
 
 	"dndgoldtracker/internal/party"
 	"dndgoldtracker/internal/storage"
@@ -56,16 +57,17 @@ type model struct {
 func NewModel() model {
 	p, err := storage.LoadParty() // Load saved data
 	if err != nil {
+		slog.Warn("unable to load party", "err", err)
 		fmt.Println("Starting new party...")
 		p = party.Party{}
 	}
 
-	newMemberFields = append(newMemberFields, party.CoinOrder...)
+	newMemberFields = append(newMemberFields, party.CoinOrderNames...)
 
 	amt := configureTable(p.ActiveMembers)
 	imt := configureTable(p.InactiveMembers)
 
-	ci := configureInputs(party.CoinOrder)
+	ci := configureInputs(party.CoinOrderNames)
 	xi := configureInputs(xpFields)
 	mi := configureInputs(newMemberFields)
 

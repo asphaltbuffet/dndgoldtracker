@@ -19,6 +19,9 @@ bin/
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# Generated output from stringer
+*_string.go
+
 # Go workspace file
 go.work
 go.work.sum

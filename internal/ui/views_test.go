@@ -26,16 +26,16 @@ func testModel(t *testing.T) model {
 		Level:        1,
 		XP:           0,
 		CoinPriority: 0,
-		Coins:        map[string]int{},
+		Coins:        map[party.Coin]int{},
 	}
 	p := party.Party{
 		ActiveMembers: []party.Member{member},
 	}
 
-	coinInputs := configureInputs(party.CoinOrder)
+	coinInputs := configureInputs(party.CoinOrderNames)
 	xpInputs := configureInputs([]string{xp})
 	memberFields := []string{name, xp}
-	memberFields = append(memberFields, party.CoinOrder...)
+	memberFields = append(memberFields, party.CoinOrderNames...)
 	memberInputs := configureInputs(memberFields)
 
 	return model{

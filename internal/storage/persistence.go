@@ -1,9 +1,10 @@
 package storage
 
 import (
-	"dndgoldtracker/internal/party"
 	"encoding/json"
 	"os"
+
+	"dndgoldtracker/internal/party"
 )
 
 // SaveParty writes party data to a JSON file
@@ -12,7 +13,7 @@ func SaveParty(p *party.Party) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile("party.json", data, 0644)
+	return os.WriteFile("party.json", data, 0o644)
 }
 
 // LoadParty loads party data from a JSON file
