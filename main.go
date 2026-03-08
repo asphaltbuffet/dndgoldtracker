@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"dndgoldtracker/ui"
+	"dndgoldtracker/internal/ui"
 
 	tea "charm.land/bubbletea/v2"
 )
