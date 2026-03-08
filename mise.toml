@@ -7,22 +7,19 @@ semver = "latest"
 
 [tasks.build]
 description = "go build"
+depends = ["mod"]
+wait_for = ["test"]
 run = "go build -o dist/ ./..."
 
 [tasks.clean]
+confirm = "This will remove `bin/`, `dist/` and clean cache. It is not reversable. Are you sure?"
 description = "remove build artifacts"
 hide = true
-run = '''
-#!/usr/bin/env bash
-
-declare -a dirs=("dist" "bin" "completions" "manpages" "release_notes")
-
-for d in "${dirs[@]}"; do
-  rm -rf $d
-done
-
-go clean -i -cache -testcache -modcache -fuzzcache -x
-'''
+run = [
+    "rm -rf dist",
+    "rm -rf bin",
+    "go clean -i -cache -testcache -modcache -fuzzcache -x",
+]
 
 [tasks.cover]
 description="go test coverage"
@@ -36,7 +33,7 @@ run = [
 
 [tasks.dev]
 description = "dev build pipeline"
-depends = ["generate", "lint", "test", "build"]
+depends = ["generate", "lint", "mod", "test", "build"]
 
 [tasks.generate]
 description = "auto generate artifacts"
@@ -65,7 +62,8 @@ depends_post = ["nix-hash"]
 
 [tasks.nix-hash]
 description = "Update gomod2nix.toml dependency lockfile"
-sources = ["go.sum"]
+hide = true
+sources = ["go.mod", "go.sum"]
 outputs = ["gomod2nix.toml"]
 run = "gomod2nix generate"
 

@@ -1,11 +1,11 @@
 package commands
 
 import (
-	"dndgoldtracker/models"
 	"log"
 	"slices"
 	"sort"
-	"cmp"
+
+	"dndgoldtracker/models"
 )
 
 // Adds a new member to the active member list and gives them last Coin Priority
@@ -84,13 +84,24 @@ func DistributeExperience(p *models.Party, xp int) {
 	log.Println("XP added!")
 }
 
+// GetFirstCoinPriority returns a member of the party with the lowest priority.
+// returns -1 if there are no members
 func GetFirstCoinPriority(p *models.Party) int {
-	partyMember := slices.MinFunc(p.ActiveMembers, func(a, b models.Member) int { return cmp.Compare(a.CoinPriority, b.CoinPriority) })
-	return slices.IndexFunc(p.ActiveMembers, func(m models.Member) bool {return m.Name == partyMember.Name})
+	if len(p.ActiveMembers) <= 0 {
+		return -1
+	}
+	minIdx := 0
+
+	for i := range p.ActiveMembers {
+		if p.ActiveMembers[i].CoinPriority < p.ActiveMembers[minIdx].CoinPriority {
+			minIdx = i
+		}
+	}
+
+	return minIdx
 }
 
 func checkLevelUp(member *models.Member) {
-
 	for member.Level < len(models.XpThresholds)-1 {
 		if member.XP >= models.XpThresholds[member.Level] {
 			member.Level++
