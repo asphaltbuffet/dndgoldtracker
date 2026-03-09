@@ -39,6 +39,7 @@ var (
 type model struct {
 	activeMemberTable   table.Model
 	inactiveMemberTable table.Model
+	dataFile            string
 	party               party.Party
 	choice              int
 	chosen              bool
@@ -53,11 +54,11 @@ type model struct {
 }
 
 // NewModel initializes the application state
-func NewModel() model {
-	p, err := storage.LoadParty() // Load saved data
+func NewModel(pf string) model {
+	p, err := storage.LoadParty(pf) // Load saved data
 	if err != nil {
-		slog.Warn("unable to load party", "err", err)
-		fmt.Println("Starting new party...")
+		slog.Warn("unable to load party", "file", pf, "err", err)
+
 		p = party.Party{}
 	}
 
@@ -72,6 +73,7 @@ func NewModel() model {
 
 	return model{
 		party:               p,
+		dataFile:            pf,
 		activeMemberTable:   amt,
 		inactiveMemberTable: imt,
 		coinInputs:          ci,

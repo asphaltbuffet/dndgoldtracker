@@ -273,7 +273,7 @@ func updateActivateMembers(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			m.activeMemberTable.SetRows(membersToRows(m.party.ActiveMembers))
 			m.inactiveMemberTable.SetRows(membersToRows(m.party.InactiveMembers))
 		case "s":
-			err := storage.SaveParty(&m.party)
+			err := storage.SaveParty(&m.party, m.dataFile)
 			if err != nil {
 				slog.Error("failed to save party data", "err", err)
 			}

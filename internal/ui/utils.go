@@ -183,7 +183,7 @@ func handleUnsetInputs(inputs []textinput.Model) {
 }
 
 func saveUpdateReset(m *model) {
-	if err := storage.SaveParty(&m.party); err != nil {
+	if err := storage.SaveParty(&m.party, m.dataFile); err != nil {
 		slog.Error("failed to save party data", "err", err)
 	}
 	updateTableData(m.party.ActiveMembers, &m.activeMemberTable)

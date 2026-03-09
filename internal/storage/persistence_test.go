@@ -37,7 +37,7 @@ func loadFrom(t *testing.T, path string) (party.Party, error) {
 	t.Cleanup(func() { _ = os.Chdir(orig) })
 	require.NoError(t, os.Rename(path, filepath.Join(dir, "party.json")))
 
-	return LoadParty()
+	return LoadParty("party.json")
 }
 
 func TestLoadParty(t *testing.T) {
@@ -90,7 +90,7 @@ func TestLoadParty(t *testing.T) {
 			p, err := loadFrom(t, path)
 			require.NoError(t, err)
 
-			assert.Equal(t, p, tt.want)
+			assert.Equal(t, tt.want, p)
 		})
 	}
 }
@@ -111,12 +111,12 @@ func TestSaveParty(t *testing.T) {
 				party.Gold:     34,
 				party.Electrum: 8,
 				party.Silver:   23,
-				party.Copper: 69,
+				party.Copper:   69,
 			},
 		}},
 	}
 
-	require.NoError(t, SaveParty(&p))
+	require.NoError(t, SaveParty(&p, "party.json"))
 
 	data, err := os.ReadFile("party.json")
 	require.NoError(t, err)
