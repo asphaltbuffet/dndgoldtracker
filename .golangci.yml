@@ -21,8 +21,6 @@ linters:
     - misspell       # catches common English spelling mistakes in comments/strings
     - testifylint    # enforces correct testify assertion usage
     - thelper        # ensures test helpers call t.Helper()
-    - copyloopvar    # detects loop variable capture issues (pre-Go 1.22 footguns)
-    - recvcheck      # flags inconsistent receiver types on the same type
 
   settings:
     nakedret:

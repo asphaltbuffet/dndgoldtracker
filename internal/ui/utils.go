@@ -2,11 +2,12 @@ package ui
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 
-	"dndgoldtracker/models"
-	"dndgoldtracker/storage"
+	"dndgoldtracker/internal/party"
+	"dndgoldtracker/internal/storage"
 
 	"charm.land/bubbles/v2/table"
 	"charm.land/bubbles/v2/textinput"
@@ -22,24 +23,24 @@ func checkbox(label string, checked bool) string {
 }
 
 // Convert members to table rows
-func membersToRows(members []models.Member) []table.Row {
+func membersToRows(members []party.Member) []table.Row {
 	rows := make([]table.Row, 0, len(members))
 	for _, m := range members {
 		rows = append(rows, table.Row{
 			m.Name,
 			strconv.Itoa(m.XP),
 			strconv.Itoa(m.Level),
-			strconv.Itoa(m.Coins[models.Platinum]),
-			strconv.Itoa(m.Coins[models.Gold]),
-			strconv.Itoa(m.Coins[models.Electrum]),
-			strconv.Itoa(m.Coins[models.Silver]),
-			strconv.Itoa(m.Coins[models.Copper]),
+			strconv.Itoa(m.Coins[party.Platinum]),
+			strconv.Itoa(m.Coins[party.Gold]),
+			strconv.Itoa(m.Coins[party.Electrum]),
+			strconv.Itoa(m.Coins[party.Silver]),
+			strconv.Itoa(m.Coins[party.Copper]),
 		})
 	}
 	return rows
 }
 
-func (m model) updateInputs(msg tea.Msg, inputs []textinput.Model) tea.Cmd {
+func updateInputs(msg tea.Msg, inputs []textinput.Model) ([]textinput.Model, tea.Cmd) {
 	cmds := make([]tea.Cmd, len(inputs))
 
 	// Only text inputs with Focus() set will respond, so it's safe to simply
@@ -48,7 +49,7 @@ func (m model) updateInputs(msg tea.Msg, inputs []textinput.Model) tea.Cmd {
 		inputs[i], cmds[i] = inputs[i].Update(msg)
 	}
 
-	return tea.Batch(cmds...)
+	return inputs, tea.Batch(cmds...)
 }
 
 func configureInputs(placeholders []string) []textinput.Model {
@@ -76,16 +77,16 @@ func configureInputs(placeholders []string) []textinput.Model {
 	return i
 }
 
-func configureTable(members []models.Member) table.Model {
+func configureTable(members []party.Member) table.Model {
 	columns := []table.Column{
 		{Title: name, Width: 10},
 		{Title: xp, Width: 6},
 		{Title: level, Width: 6},
-		{Title: models.Platinum, Width: 10},
-		{Title: models.Gold, Width: 6},
-		{Title: models.Electrum, Width: 10},
-		{Title: models.Silver, Width: 8},
-		{Title: models.Copper, Width: 8},
+		{Title: party.Platinum.String(), Width: 10},
+		{Title: party.Gold.String(), Width: 6},
+		{Title: party.Electrum.String(), Width: 10},
+		{Title: party.Silver.String(), Width: 8},
+		{Title: party.Copper.String(), Width: 8},
 	}
 
 	rows := membersToRows(members)
@@ -136,10 +137,9 @@ func focusTable(t *table.Model) {
 	t.SetStyles(s)
 }
 
-func updateTableData(members []models.Member, t *table.Model) *table.Model {
+func updateTableData(members []party.Member, t *table.Model) {
 	rows := membersToRows(members)
 	t.SetRows(rows)
-	return t
 }
 
 func resetInputs(inputs []textinput.Model) {
@@ -183,7 +183,9 @@ func handleUnsetInputs(inputs []textinput.Model) {
 }
 
 func saveUpdateReset(m *model) {
-	_ = storage.SaveParty(&m.party)
+	if err := storage.SaveParty(&m.party, m.dataFile); err != nil {
+		slog.Error("failed to save party data", "err", err)
+	}
 	updateTableData(m.party.ActiveMembers, &m.activeMemberTable)
 	resetInputs(m.coinInputs)
 	resetInputs(m.xpInputs)

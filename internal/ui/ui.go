@@ -1,9 +1,11 @@
 package ui
 
 import (
-	"dndgoldtracker/models"
-	"dndgoldtracker/storage"
 	"fmt"
+	"log/slog"
+
+	"dndgoldtracker/internal/party"
+	"dndgoldtracker/internal/storage"
 
 	"charm.land/bubbles/v2/table"
 	"charm.land/bubbles/v2/textinput"
@@ -29,16 +31,16 @@ var (
 	helpStyle           = blurredStyle
 	cursorModeHelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
 
-	focusedButton   = focusedStyle.Render("[ Submit ]")
-	blurredButton   = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
-	xpFields        = []string{xp}
-	newMemberFields = []string{name, xp}
+	focusedButton = focusedStyle.Render("[ Submit ]")
+	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
+	xpFields      = []string{xp}
 )
 
 type model struct {
 	activeMemberTable   table.Model
 	inactiveMemberTable table.Model
-	party               models.Party
+	dataFile            string
+	party               party.Party
 	choice              int
 	chosen              bool
 	coinFocusIndex      int
@@ -52,24 +54,26 @@ type model struct {
 }
 
 // NewModel initializes the application state
-func NewModel() model {
-	p, err := storage.LoadParty() // Load saved data
+func NewModel(pf string) model {
+	p, err := storage.LoadParty(pf) // Load saved data
 	if err != nil {
-		fmt.Println("Starting new party...")
-		p = models.Party{}
+		slog.Warn("unable to load party", "file", pf, "err", err)
+
+		p = party.Party{}
 	}
 
-	newMemberFields = append(newMemberFields, models.CoinOrder...)
+	newMemberFields := append([]string{name, xp}, party.CoinOrderNames...)
 
 	amt := configureTable(p.ActiveMembers)
 	imt := configureTable(p.InactiveMembers)
 
-	ci := configureInputs(models.CoinOrder)
+	ci := configureInputs(party.CoinOrderNames)
 	xi := configureInputs(xpFields)
 	mi := configureInputs(newMemberFields)
 
 	return model{
 		party:               p,
+		dataFile:            pf,
 		activeMemberTable:   amt,
 		inactiveMemberTable: imt,
 		coinInputs:          ci,

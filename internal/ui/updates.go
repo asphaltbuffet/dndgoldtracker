@@ -5,9 +5,8 @@ import (
 	"slices"
 	"strconv"
 
-	"dndgoldtracker/commands"
-	"dndgoldtracker/models"
-	"dndgoldtracker/storage"
+	"dndgoldtracker/internal/party"
+	"dndgoldtracker/internal/storage"
 
 	"charm.land/bubbles/v2/table"
 	tea "charm.land/bubbletea/v2"
@@ -60,23 +59,23 @@ func updateMoney(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			// If so, Distribute money.
 			if m.coinFocusIndex == len(m.coinInputs) {
 				var err error
-				coinMap := make(map[string]int)
+				coinMap := make(map[party.Coin]int)
 				// Set any unset values to 0
 				handleUnsetInputs(m.coinInputs)
 
-				for i := range models.CoinOrder {
-					coinMap[models.CoinOrder[i]], err = strconv.Atoi(m.coinInputs[i].Value())
+				for i := range party.CoinOrder {
+					coinMap[party.CoinOrder[i]], err = strconv.Atoi(m.coinInputs[i].Value())
 					if err != nil {
-						slog.Error("invalid coin value", "type", models.CoinOrder[i], "input", m.coinInputs[i].Value(), "err", err)
+						slog.Error("invalid coin value", "type", party.CoinOrder[i], "input", m.coinInputs[i].Value(), "err", err)
 
 						return m, nil
 					}
 
-					slog.Debug("coin input parsed", "type", models.CoinOrder[i], "amount", coinMap[models.CoinOrder[i]])
+					slog.Debug("coin input parsed", "type", party.CoinOrder[i], "amount", coinMap[party.CoinOrder[i]])
 				}
 
 				// Distribute the coins to the party
-				commands.DistributeCoins(&m.party, coinMap)
+				party.DistributeCoins(&m.party, coinMap)
 				saveUpdateReset(&m)
 
 				m.chosen = false
@@ -96,7 +95,8 @@ func updateMoney(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		}
 	}
 	// Handle character input and blinking
-	cmd := m.updateInputs(msg, m.coinInputs)
+	var cmd tea.Cmd
+	m.coinInputs, cmd = updateInputs(msg, m.coinInputs)
 
 	return m, cmd
 }
@@ -128,7 +128,7 @@ func updateExperience(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 				slog.Debug("parsed xp input", "xp", xp)
 
-				commands.DistributeExperience(&m.party, xp)
+				m.party.DistributeExperience(xp)
 				saveUpdateReset(&m)
 
 				m.chosen = false
@@ -147,7 +147,8 @@ func updateExperience(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		}
 	}
 	// Handle character input and blinking
-	cmd := m.updateInputs(msg, m.xpInputs)
+	var cmd tea.Cmd
+	m.xpInputs, cmd = updateInputs(msg, m.xpInputs)
 
 	return m, cmd
 }
@@ -182,10 +183,10 @@ func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 
-				newMemberCoins := m.memberInputs[2:len(m.memberInputs)]
-				newMemberMoney := make(map[string]int)
+				newMemberCoins := m.memberInputs[2:]
+				newMemberMoney := make(map[party.Coin]int)
 				for i := range newMemberCoins {
-					newMemberMoney[newMemberCoins[i].Placeholder], err = strconv.Atoi(newMemberCoins[i].Value())
+					newMemberMoney[party.Coin(i)], err = strconv.Atoi(newMemberCoins[i].Value())
 					if err != nil {
 						slog.Warn("invalid coin value for new member", "field", newMemberCoins[i].Placeholder)
 						return m, nil
@@ -193,7 +194,7 @@ func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				}
 
 				// Add the new party Member
-				commands.AddMember(&m.party, name, xp, newMemberMoney)
+				m.party.AddMember(name, xp, newMemberMoney)
 				saveUpdateReset(&m)
 
 				m.chosen = false
@@ -213,7 +214,8 @@ func updateAddMember(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		}
 	}
 	// Handle character input and blinking
-	cmd := m.updateInputs(msg, m.memberInputs)
+	var cmd tea.Cmd
+	m.memberInputs, cmd = updateInputs(msg, m.memberInputs)
 
 	return m, cmd
 }
@@ -238,8 +240,8 @@ func updateActivateMembers(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			}
 		case "enter":
 			var selectedTable *table.Model
-			var selectedMembers *[]models.Member
-			var unselectedMembers *[]models.Member
+			var selectedMembers *[]party.Member
+			var unselectedMembers *[]party.Member
 			// Move the selected member from their current table to the new one
 			if m.activeMemberTable.Focused() {
 				selectedTable = &m.activeMemberTable
@@ -266,12 +268,12 @@ func updateActivateMembers(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			}
 			slog.Info("moving member", "name", memberName, "from", from, "to", to)
 
-			memberIndex := slices.IndexFunc(*selectedMembers, func(m models.Member) bool { return m.Name == memberName })
-			commands.ChangeMemberGroup(selectedMembers, unselectedMembers, memberIndex)
+			memberIndex := slices.IndexFunc(*selectedMembers, func(m party.Member) bool { return m.Name == memberName })
+			party.ChangeMemberGroup(selectedMembers, unselectedMembers, memberIndex)
 			m.activeMemberTable.SetRows(membersToRows(m.party.ActiveMembers))
 			m.inactiveMemberTable.SetRows(membersToRows(m.party.InactiveMembers))
 		case "s":
-			err := storage.SaveParty(&m.party)
+			err := storage.SaveParty(&m.party, m.dataFile)
 			if err != nil {
 				slog.Error("failed to save party data", "err", err)
 			}

@@ -4,12 +4,11 @@ import (
 	"regexp"
 	"testing"
 
-	"dndgoldtracker/models"
+	"dndgoldtracker/internal/party"
 
 	"github.com/stretchr/testify/assert"
 )
 
-// var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 var ansiEscape = regexp.MustCompile(`\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])`)
 
 func stripANSI(s string) string {
@@ -21,27 +20,27 @@ func stripANSI(s string) string {
 func testModel(t *testing.T) model {
 	t.Helper()
 
-	member := models.Member{
+	member := party.Member{
 		Name:         "Keg",
 		Level:        1,
 		XP:           0,
 		CoinPriority: 0,
-		Coins:        map[string]int{},
+		Coins:        map[party.Coin]int{},
 	}
-	party := models.Party{
-		ActiveMembers: []models.Member{member},
+	p := party.Party{
+		ActiveMembers: []party.Member{member},
 	}
 
-	coinInputs := configureInputs(models.CoinOrder)
+	coinInputs := configureInputs(party.CoinOrderNames)
 	xpInputs := configureInputs([]string{xp})
 	memberFields := []string{name, xp}
-	memberFields = append(memberFields, models.CoinOrder...)
+	memberFields = append(memberFields, party.CoinOrderNames...)
 	memberInputs := configureInputs(memberFields)
 
 	return model{
-		party:               party,
-		activeMemberTable:   configureTable(party.ActiveMembers),
-		inactiveMemberTable: configureTable(party.InactiveMembers),
+		party:               p,
+		activeMemberTable:   configureTable(p.ActiveMembers),
+		inactiveMemberTable: configureTable(p.InactiveMembers),
 		coinInputs:          coinInputs,
 		xpInputs:            xpInputs,
 		memberInputs:        memberInputs,

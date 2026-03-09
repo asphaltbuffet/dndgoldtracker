@@ -1,9 +1,10 @@
 package ui
 
 import (
-	"dndgoldtracker/commands"
 	"fmt"
 	"strings"
+
+	"dndgoldtracker/internal/party"
 )
 
 // Sub-Views
@@ -14,7 +15,7 @@ func choicesView(m model) string {
 	var msg string
 	if (len(m.party.ActiveMembers)) > 0 {
 		msg += "Current Coin Priority is to " +
-			focusedStyle.Render(m.party.ActiveMembers[commands.GetFirstCoinPriority(&m.party)].Name) + "\n"
+			focusedStyle.Render(m.party.ActiveMembers[party.GetFirstCoinPriority(&m.party)].Name) + "\n"
 	}
 
 	msg += baseStyle.Render(m.activeMemberTable.View())
@@ -45,7 +46,7 @@ func moneyView(m model) string {
 		"Extra coins are distributed based on a priority system that rotates.\n"))
 	if (len(m.party.ActiveMembers)) > 0 {
 		msg.WriteString("\nCurrent Coin Priority is to " +
-			focusedStyle.Render(m.party.ActiveMembers[commands.GetFirstCoinPriority(&m.party)].Name))
+			focusedStyle.Render(m.party.ActiveMembers[party.GetFirstCoinPriority(&m.party)].Name))
 	}
 
 	msg.WriteString("\n" + buildInputList(m.coinInputs, m.coinFocusIndex, m.virtualCursor))
